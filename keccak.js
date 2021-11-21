@@ -3,7 +3,7 @@ export function bytes_from_input(x) {
 		return x; 
 	} else if (Array.isArray(x)) {
 		return Uint8Array.from(x);
-	} else if (Array.isView(x)) {
+	} else if (ArrayBuffer.isView(x)) {
 		return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
 	} else if (typeof x === 'string') {
 		let {length} = x;
