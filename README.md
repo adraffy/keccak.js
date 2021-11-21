@@ -6,7 +6,7 @@
 ```JavaScript
 import {KeccakHasher} from '@antistupid/keccak';
 // browser:
-// import {KeccakHasher} 'from https://unpkg.com/@antistupid/keccak@latest/keccak.js';
+// import {KeccakHasher} from 'https://unpkg.com/@antistupid/keccak@latest/keccak.js';
 
 // create a reusable hasher:
 let h = KeccakHasher.unpadded(); // default, 256-bit
