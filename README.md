@@ -1,6 +1,8 @@
 # keccak.js
 1-file, 0-dependancy ES6 Keccak because bloat and dependencies are bullshit.
 
+<a href="https://raffy.antistupid.com/eth/keccak.html">Demo</a>
+
 ```JavaScript
 import {KeccakHasher} from '@antistupid/keccak';
 // browser:
@@ -28,3 +30,4 @@ KeccakHasher.unpadded().update('A').finalize().hex
 ```
 
 Using **Rounded Constant LFSR** from [brix/crypto-js](https://github.com/brix/crypto-js/blob/develop/src/sha3.js) and **32-bit Permute** from [emn178/js-sha](https://github.com/emn178/js-sha3).
+
