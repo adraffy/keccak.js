@@ -4,13 +4,14 @@
 <a href="https://raffy.antistupid.com/eth/keccak.html">Demo</a>
 
 ```JavaScript
-import {KeccakHasher} from '@antistupid/keccak';
+import {KeccakHasher} from '@adraffy/keccak';
 // browser:
-// import {KeccakHasher} from 'https://unpkg.com/@antistupid/keccak@latest/keccak.js';
+// import {KeccakHasher} from 'https://unpkg.com/@adraffy/keccak@latest/keccak.js';
 
 // create a reusable hasher:
 let h = KeccakHasher.unpadded(); // default, 256-bit
-//      KeccakHasher.sha3(384)
+//      KeccakHasher.sha3(384)   // 384-bit SHA-3
+//      KeccakHasher.shake(8000, 128); // 1000 bytes of shake128
 
 // add some data:
 h.update('A'); // strings
