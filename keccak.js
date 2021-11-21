@@ -1,24 +1,3 @@
-// keccak.js
-// raffy.eth
-// 
-// v1.0.0
-// - first release
-//
-// create a reusable hasher:
-//   let h = KeccakHasher.unpadded() // default 256 bit
-//   h.digest('A'); // accepts strings
-//   h.digest('B').digest('C'); // chainable
-// generate output: // note: after finalize, hasher is usable again
-//   h.finalize(); 
-//   h.output => Uint8Array
-//   h.hex => hex string (no 0x-prefix)
-// provide more input:
-//   h.digest([1,2]); // arrays
-//   h.digest(Uint8Array.from([3,4])); // typed-arrays
-//   h.digest(5); // bytes
-// one-liner:
-//   KeccakHasher.unpadded().digest('A').finalize().hex
-
 export function bytes_from_input(x) {
 	if (x instanceof Uint8Array) {
 		return x; 
