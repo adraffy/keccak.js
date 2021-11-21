@@ -22,10 +22,10 @@ h.update('B').update('C');        // chainable
 h.update([1,2]);                  // arrays
 h.update(Uint8Array.from([3,4])); // typed-arrays
 h.update(5);                      // single byte
-h.finalize();                     // also-chainable
+h.finalize();                     // chainable
 // h is ready for new input
 
-// access hash (after finalize):
+// access hash post finalize():
 h.output // Uint8Array (note: this is reused, .slice() for a copy)
 h.hex // hex-string (note: this is computed, not 0x-prefixed)
 
