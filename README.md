@@ -9,11 +9,11 @@ let h = KeccakHasher.unpadded(); // default, 256-bit
 //      KeccakHasher.sha3(384)
 
 // add some data:
-h.digest('A'); // accepts strings
-h.digest('B').digest('C'); // chainable
-h.digest([1,2]); // arrays
-h.digest(Uint8Array.from([3,4])); // typed-arrays
-h.digest(5); // single byte
+h.update('A'); // accepts strings
+h.update('B').update('C'); // chainable
+h.update([1,2]); // arrays
+h.update(Uint8Array.from([3,4])); // typed-arrays
+h.update(5); // single byte
 h.finalize(); // also-chainable
 // h is ready again for input
 
