@@ -1,6 +1,6 @@
 {
-  "name": "@antistupid/keccak",
-  "version": "1.0.2",
+  "name": "@adraffy/keccak",
+  "version": "1.0.3",
   "description": "Single-include ES6 Keccak",
   "keywords": ["sha3", "keccak"],
   "type": "module",

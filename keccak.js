@@ -21,17 +21,23 @@ export function bytes_from_input(x) {
 
 export class KeccakHasher {
 	// https://en.wikipedia.org/wiki/SHA-3#Instances
-	static unpadded(bits = 256) { return new this(bits << 1, bits, 1); } // [1]0*1
-	static sha3(bits = 256) { return new this(bits << 1, bits, 6); } // [011]0*1
+	static unpadded(bits = 256) { return new this(bits << 1, bits, 0b01); } // [1]0*1
+	static sha3(bits = 256) { return new this(bits << 1, bits, 0b0110); } // [011]0*1
+	static shake(output_bits, bits = 128) { return new this(bits << 1, output_bits, 0b11111); }
 	constructor(capacity_bits, output_bits, suffix) {
-		if ((capacity_bits | output_bits) & 0x1F) throw new Error('bits not divisible by 32');
+		const C = 1600;
+		if (capacity_bits & 0x1F) throw new Error('capacity not divisible by 32');
+		if (output_bits & 0x7) throw new Error('output not divisible by 8');
+		if (capacity_bits < 0 || capacity_bits >= C) throw new Error(`capacity must be [0,${C})`);
+		if (output_bits < 0) throw new Error('output must be non-negative');
 		this.state = new Uint32Array(RC.length + 2);
-		this.block = new Uint32Array((1600 - capacity_bits) >> 5);
+		this.block = new Uint32Array((C - capacity_bits) >> 5);
 		this.suffix = suffix; // padding 
 		this.block_index = 0; // current block index
 		this.ragged_block = 0; // ragged block bytes
 		this.ragged_width = 0; // ragged block width
-		this.output = new Uint8Array(output_bits >> 3);
+		let buf = new ArrayBuffer((output_bits + 0x1F) >> 3); // allow aligned access
+		this.output = new Uint8Array(buf, 0, output_bits >> 3);
 	}
 	_permute_state() {
 		let {state, block} = this;
@@ -97,14 +103,15 @@ export class KeccakHasher {
 	}
 	finalize() {
 		let {output, state, block} = this;
-		let view = new DataView(output.buffer, output.byteOffset, output.byteLength);
-		view.setUint32(0, this.suffix, true);
-		if (this.block_index == block.length - 1) { 
-			output[3 - this.ragged_width] |= 0x80; 
+		if (output.length == 0) return this; // kekkak
+		let view = new DataView(output.buffer);
+		view.setUint32(0, this.suffix, true); // padding start
+		if (this.block_index == block.length - 1) { // there is one block left
+			output[3 - this.ragged_width] |= 0x80;  // padding end (last byte)
 			this._add_ragged(output); // this will _permute()
 		} else {
 			this._add_ragged(output);
-			block[block.length - 1] |= 0x80000000;
+			block[block.length - 1] |= 0x80000000; // padding end
 			this._permute_state();
 		}
 		for (let off = 0, i = 0; off < output.length; off += 4) {
