@@ -22,7 +22,7 @@ h.output // Uint8Array
 h.hex // hex-string (not 0x-prefixed)
 
 // one-liner:
-KeccakHasher.unpadded().digest('A').finalize().hex
+KeccakHasher.unpadded().update('A').finalize().hex
 ```
 
 Using **Rounded Constant LFSR** from [brix/crypto-js](https://github.com/brix/crypto-js/blob/develop/src/sha3.js) and **32-bit Permute** from [emn178/js-sha](https://github.com/emn178/js-sha3).
