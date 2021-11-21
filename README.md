@@ -10,21 +10,24 @@ import {KeccakHasher} from '@adraffy/keccak';
 
 // create a reusable hasher:
 let h = KeccakHasher.unpadded(); // default, 256-bit
-//      KeccakHasher.sha3(384)   // 384-bit SHA-3
-//      KeccakHasher.shake(8000, 128); // 1000 bytes of shake128
+
+// alternatives: (note: bits % 32 == 0)
+// - KeccakHasher.unpadded(bits)   
+// - KeccakHasher.sha3(bits)
+// - KeccakHasher.shake(n_bits, bits) // (note: n_bits % 8 == 0)
 
 // add some data:
-h.update('A'); // strings
-h.update('B').update('C'); // chainable
-h.update([1,2]); // arrays
+h.update('A');                    // strings
+h.update('B').update('C');        // chainable
+h.update([1,2]);                  // arrays
 h.update(Uint8Array.from([3,4])); // typed-arrays
-h.update(5); // single byte
-h.finalize(); // also-chainable
-// h is ready again for input
+h.update(5);                      // single byte
+h.finalize();                     // also-chainable
+// h is ready for new input
 
-// access hash:
-h.output // Uint8Array (this is reused, .slice() if needed)
-h.hex // hex-string (not 0x-prefixed)
+// access hash (after finalize):
+h.output // Uint8Array (note: this is reused, .slice() for a copy)
+h.hex // hex-string (note: this is computed, not 0x-prefixed)
 
 // one-liner:
 KeccakHasher.unpadded().update('A').finalize().hex

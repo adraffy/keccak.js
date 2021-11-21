@@ -21,14 +21,14 @@ export function bytes_from_input(x) {
 
 export class KeccakHasher {
 	// https://en.wikipedia.org/wiki/SHA-3#Instances
-	static unpadded(bits = 256) { return new this(bits << 1, bits, 0b01); } // [1]0*1
-	static sha3(bits = 256) { return new this(bits << 1, bits, 0b0110); } // [011]0*1
-	static shake(output_bits, bits = 128) { return new this(bits << 1, output_bits, 0b11111); }
+	static unpadded(bits = 256)      { return new this(bits << 1, bits,       0b1); } // [1]0*1
+	static sha3(bits = 256)          { return new this(bits << 1, bits,     0b110); } // [011]0*1
+	static shake(n_bits, bits = 128) { return new this(bits << 1, n_bits, 0b11111); } // [11111]0*1
 	constructor(capacity_bits, output_bits, suffix) {
 		const C = 1600;
-		if (capacity_bits & 0x1F) throw new Error('capacity not divisible by 32');
-		if (output_bits & 0x7) throw new Error('output not divisible by 8');
+		if (capacity_bits & 0x1F) throw new Error('capacity % 32 != 0');
 		if (capacity_bits < 0 || capacity_bits >= C) throw new Error(`capacity must be [0,${C})`);
+		if (output_bits & 0x7) throw new Error('output % 8 != 0');
 		if (output_bits < 0) throw new Error('output must be non-negative');
 		this.state = new Uint32Array(RC.length + 2);
 		this.block = new Uint32Array((C - capacity_bits) >> 5);
@@ -121,8 +121,8 @@ export class KeccakHasher {
 				permute(state);
 			}
 		}
-		state.fill(0); // can be reused after finalize
-		return this;
+		state.fill(0);
+		return this; // we are ready for new input
 	}
 	// use .output for bytes
 	get hex() { return [...this.output].map(x => x.toString(16).padStart(2, '0')).join(''); }
