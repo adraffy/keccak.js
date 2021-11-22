@@ -6,6 +6,7 @@ export function bytes_from_input(x) {
 	} else if (ArrayBuffer.isView(x)) {
 		return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
 	} else if (typeof x === 'string') {
+		x = unescape(encodeURIComponent(x));
 		let {length} = x;
 		let v = new Uint8Array(length);
 		for (let i = 0; i < length; i++) {
