@@ -1,4 +1,4 @@
-import {keccak, sha3, shake, bytes_from_hex} from '../keccak.js';
+import {keccak, sha3, shake} from '../keccak.js';
 import {readFileSync} from 'fs';
 
 function test_list(tests) {
@@ -37,6 +37,10 @@ function test_file(path) {
 	console.log(`Pass: ${path}`);
 }
 
+function local_file(name) {
+	return new URL(name, import.meta.url).pathname;
+}
+
 try {
 	// why are the NIST samples PDF?!?
 	// https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha3vs.pdf
@@ -45,10 +49,10 @@ try {
 
 	// examples from wikpedia
 	// https://en.wikipedia.org/wiki/SHA-3#Examples_of_SHA-3_variants
-	test_file('data-wiki.json');
+	test_file(local_file('data-wiki.json'));
 
 	// generated samples from Mathematica v12.1
-	test_file('data-mathematica.json');
+	test_file(local_file('data-mathematica.json'));
 
 } catch (err) {
 	console.error(err);

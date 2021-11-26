@@ -1,3 +1,6 @@
+// TODO: figure out why Int32Array/Uint32Array is slow
+
+// primary api
 export function keccak(bits = 256) { return new Fixed(bits,        0b1); } // [1]0*1
 export function sha3(bits = 256)   { return new Fixed(bits,      0b110); } // [011]0*1
 export function shake(bits)        { return new Extended(bits, 0b11111); } // [11111]0*1
@@ -32,6 +35,12 @@ export function bytes_from_hex(s) {
 		v[i] = b;
 	}
 	return v;
+}
+
+// returns hex from ArrayLike
+// no 0x-
+export function hex_from_bytes(v) {
+	return  [...v].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
 class KeccakHasher {
@@ -121,17 +130,13 @@ class KeccakHasher {
 	}
 }
 
-function bytes_to_hex(v) {
-	return  [...v].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
 class Extended extends KeccakHasher {
 	constructor(bits, padding) {
 		super(bits << 1, padding);
 		this.size0 = bits >> 2; // default output size
 		this.byte_offset = 0; // byte-offset of output
 	}
-	hex(size) { return bytes_to_hex(this.bytes(size)); }
+	hex(size) { return hex_from_bytes(this.bytes(size)); }
 	bytes(size) {
 		this.finalize();
 		if (!size) size = this.size0;
@@ -157,7 +162,7 @@ class Fixed extends KeccakHasher {
 		super(bits << 1, padding);
 		this.size = bits >> 5;
 	}
-	get hex() { return bytes_to_hex(this.bytes); }
+	get hex() { return hex_from_bytes(this.bytes); }
  	get bytes() {
 		this.finalize();
 		let {size, sponge: state} = this;
@@ -169,8 +174,7 @@ class Fixed extends KeccakHasher {
 	}
 }
 
-// from tests/round_const.js
-//const RC = Int32Array.of(1,0,32898,0,32906,-2147483648,-2147450880,-2147483648,32907,0,-2147483647,0,-2147450751,-2147483648,32777,-2147483648,138,0,136,0,-2147450871,0,-2147483638,0,-2147450741,0,139,-2147483648,32905,-2147483648,32771,-2147483648,32770,-2147483648,128,-2147483648,32778,0,-2147483638,-2147483648,-2147450751,-2147483648,32896,-2147483648,-2147483647,0,-2147450872,-2147483648);
+// from tests/get_round_const.js
 const RC = [1,0,32898,0,32906,-2147483648,-2147450880,-2147483648,32907,0,-2147483647,0,-2147450751,-2147483648,32777,-2147483648,138,0,136,0,-2147450871,0,-2147483638,0,-2147450741,0,139,-2147483648,32905,-2147483648,32771,-2147483648,32770,-2147483648,128,-2147483648,32778,0,-2147483638,-2147483648,-2147450751,-2147483648,32896,-2147483648,-2147483647,0,-2147450872,-2147483648];
 
 // https://github.com/emn178/js-sha3/blob/master/src/sha3.js
