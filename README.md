@@ -5,8 +5,8 @@
 
 ```JavaScript
 import {keccak, sha3, shake} from '@adraffy/keccak';
-// browser:
-// import {KeccakHasher} from 'https://unpkg.com/@adraffy/keccak@latest/keccak.js';
+// browser: https://unpkg.com/@adraffy/keccak@latest/keccak.js
+//  minify: https://unpkg.com/@adraffy/keccak@latest/dist/keccak.min.js
 
 // create a hasher:
 let h = keccak(); // default: 256-bit
