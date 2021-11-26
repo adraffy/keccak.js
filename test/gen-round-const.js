@@ -1,4 +1,5 @@
-// https://github.com/brix/crypto-js/blob/develop/src/sha3.js
+// reference:
+// https://github.com/XKCP/XKCP/blob/master/lib/low/KeccakP-1600/ref-32bits/KeccakP-1600-reference32BI.c#L103
 
 let v = [];
 
@@ -15,7 +16,7 @@ for (let LFSR = 1, i = 0; i < 48; i += 2) {
 		}
 		LFSR = (LFSR & 0x80) ? (LFSR << 1) ^ 0x71 : (LFSR << 1);
 	}
-    v.push(lower, upper);
+	v.push(lower, upper);
 }
 
 console.log('[' + v.join(',') + ']');
