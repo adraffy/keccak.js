@@ -1,157 +1,169 @@
-export function bytes_from_input(x) {
-	if (x instanceof Uint8Array) {
-		return x; 
-	} else if (Array.isArray(x)) {
-		return Uint8Array.from(x);
-	} else if (ArrayBuffer.isView(x)) {
-		return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
-	} else if (typeof x === 'string') {
-		x = unescape(encodeURIComponent(x));
-		let {length} = x;
-		let v = new Uint8Array(length);
-		for (let i = 0; i < length; i++) {
-			v[i] = x.charCodeAt(i);
-		}
-		return v;
-	} else if (typeof x === 'number') { // allow byte?
-		return Uint8Array.from([x & 0xFF]); 
-	} else {
-		throw new TypeError('unknown conversion to bytes');
+export function keccak(bits = 256) { return new Constant(bits,     0b1); } // [1]0*1
+export function sha3(bits = 256)   { return new Constant(bits,   0b110); } // [011]0*1
+export function shake(bits)        { return new Extended(bits, 0b11111); } // [11111]0*1
+
+export function bytes_from_str(s) {
+	if (typeof s !== 'string') throw TypeError('expected string');
+	s = unescape(encodeURIComponent(s)); // explode utf16
+	let {length} = s;
+	let v = new Uint8Array(length);
+	for (let i = 0; i < length; i++) {
+		v[i] = s.charCodeAt(i);
 	}
+	return v;
 }
 
-export class KeccakHasher {
-	// https://en.wikipedia.org/wiki/SHA-3#Instances
-	static unpadded(bits = 256)      { return new this(bits << 1, bits,       0b1); } // [1]0*1
-	static sha3(bits = 256)          { return new this(bits << 1, bits,     0b110); } // [011]0*1
-	static shake(n_bits, bits = 128) { return new this(bits << 1, n_bits, 0b11111); } // [11111]0*1
-	constructor(capacity_bits, output_bits, suffix) {
+export function bytes_from_hex(s) {
+	if (typeof s !== 'string') throw TypeError('expected string');
+	let {length} = s;
+	if (length & 1) throw new TypeError('expected string of hex bytes');
+	let pos = 0;
+	if (s.startsWith('0x')) pos += 2;
+	let len = (length - pos) >> 1;
+	let v = new Uint8Array(len);
+	for (let i = 0; i < len; i++) {
+		let b = parseInt(s.slice(pos, pos += 2), 16);
+		if (Number.isNaN(b)) throw new TypeError('expected hex byte');
+		v[i] = b;
+	}
+	return v;
+}
+
+class KeccakHasher {
+	constructor(capacity_bits, suffix) {
 		const C = 1600;
 		if (capacity_bits & 0x1F) throw new Error('capacity % 32 != 0');
 		if (capacity_bits < 0 || capacity_bits >= C) throw new Error(`capacity must be [0,${C})`);
-		if (output_bits & 0x7) throw new Error('output % 8 != 0');
-		if (output_bits < 0) throw new Error('output must be non-negative');
-		this.state = new Uint32Array(RC.length + 2);
-		this.block = new Uint32Array((C - capacity_bits) >> 5);
-		this.suffix = suffix; // padding 
+		this.sponge = Array(50).fill(0); // new Int32Array(RC.length + 2);
+		this.block_count = (C - capacity_bits) >> 5;
 		this.block_index = 0; // current block index
+		this.suffix = suffix; // padding byte
 		this.ragged_block = 0; // ragged block bytes
 		this.ragged_width = 0; // ragged block width
-		let buf = new ArrayBuffer((output_bits + 0x1F) >> 3); // allow aligned access
-		this.output = new Uint8Array(buf, 0, output_bits >> 3);
 	}
-	_permute_state() {
-		let {state, block} = this;
-		for (let i = 0; i < block.length; i++) {
-			state[i] ^= block[i];
+	update(v) {
+		if (!(v instanceof Uint8Array)) {
+			if (v instanceof ArrayBuffer) { 
+				v = new Uint8Array(v);
+			} else if (Array.isArray(v)) { 
+				v = Uint8Array.from(v);
+			} else if (typeof v === 'string') {
+				v = bytes_from_str(v);
+			} else {
+				throw new TypeError('expected bytes');
+			}
 		}
-		permute(state);
-		block.fill(0);
-		this.block_index = 0;
-	}
-	_add_block(x) {
-		this.block[this.block_index++] = x;
-		if (this.block_index == this.block.length) {
-			this._permute_state();
+		let off = 0;
+		let len = v.length;
+		if (this.ragged_width > 0) {
+			off = this._add_ragged(v, 0);
+			if (off == len) return this;
 		}
+		let {sponge, block_index, block_count} = this;
+		for (; off + 4 <= len; off += 4) {
+			sponge[block_index++] ^= v[off] | (v[off+1] << 8) | (v[off+2] << 16) | (v[off+3] << 24);
+			if (block_index == block_count) {
+				permute32(sponge);
+				block_index = 0;
+			}
+		}
+		this.block_index = block_index;
+		if (off < len) this._add_ragged(v, off); // store remainder [1-3 bytes]
+		return this; // chainable
 	}
-	_add_ragged(v) {
+	_add_ragged(v, off) {
 		let {ragged_width, ragged_block} = this;
-		let added = Math.min(4 - ragged_width, v.length);
-		for (let i = 0; i < added; i++) {
-			ragged_block |= v[i] << (ragged_width++ << 3);
+		let added = 0;
+		for (; off < v.length && ragged_width < 32; added++, off++, ragged_width += 8) {
+			ragged_block |= v[off] << ragged_width;
 		}
-		if (ragged_width === 4) {
+		if (ragged_width == 32) {
 			this._add_block(ragged_block);
 			ragged_width = 0;
 			ragged_block = 0;
 		} 
 		this.ragged_block = ragged_block;
 		this.ragged_width = ragged_width;
-		return added; // returns bytes used from v
+		return added; 
 	}
-	update(input) {
-		let v = bytes_from_input(input);
-		if (v.length == 0) return this; 
-		if (this.ragged_width > 0) { // complete ragged buffer first
-			let n = this._add_ragged(v);
-			if (n == v.length) return this;
-			v = v.subarray(n);
+	// digest a little-endian 32-bit word
+	// warning: unsafe if ragged_width > 0
+	_add_block(x) {
+		let {sponge, block_index, block_count} = this;
+		sponge[block_index++] ^= x;
+		if (block_index == block_count) {
+			permute32(sponge);
+			block_index = 0;
 		}
-		const CHUNK_SIZE = this.block.length << 4;
-		if (v.byteOffset & 0x3 && v.length >= CHUNK_SIZE) { 
-			v = v.slice(); // align dedotated wam
-		}
-		let view = new DataView(v.buffer, v.byteOffset, v.byteLength);
-		let off = 0;
-		for (; this.block_index > 0 && off + 4 <= v.byteLength; off += 4) { // finish unused blocks 
-			this._add_block(view.getUint32(off, true));
-		}
-		let {state} = this;
-		while (off + CHUNK_SIZE < v.byteLength) { // process entire chunks
-			for (let i = 0; i < this.block.length; i++, off += 4) {
-				state[i] ^= view.getUint32(off, true);
-			}
-			permute(state);
-		}
-		for (; off + 4 <= v.byteLength; off += 4) { // put remainder in blocks
-			this._add_block(view.getUint32(off, true));
-		}
-		if (off < v.byteLength) { // put remainder in ragged [1-3 bytes]
-			this._add_ragged(v.subarray(off));
-		}
-		return this;
-	}
+		this.block_index = block_index;
+	}	
 	finalize() {
-		let {output, state, block} = this;
-		if (output.length == 0) return this; // kekkak
-		let view = new DataView(output.buffer);
-		view.setUint32(0, this.suffix, true); // padding start
-		if (this.block_index == block.length - 1) { // there is one block left
-			output[3 - this.ragged_width] |= 0x80;  // padding end (last byte)
-			this._add_ragged(output); // this will _permute()
+		let {sponge, suffix, ragged_width, block_index, block_count} = this;
+		if (ragged_width) {
+			if (ragged_width == -1) return this; // already finalized
+			suffix = this.ragged_block | (suffix << ragged_width);
+		}
+		if (block_index == block_count - 1) { 
+			suffix ^= 0x80000000;
 		} else {
-			this._add_ragged(output);
-			block[block.length - 1] |= 0x80000000; // padding end
-			this._permute_state();
+			sponge[block_count - 1] ^= 0x80000000;
 		}
-		for (let off = 0, i = 0; off < output.length; off += 4) {
-			view.setUint32(off, state[i++], true);
-			if (i == state.length) {
-				i = 0;
-				permute(state);
-			}
-		}
-		state.fill(0);
-		return this; // we are ready for new input
+		sponge[block_index] ^= suffix;
+		permute32(sponge);
+		this.ragged_width = -1; // mark as finalized
 	}
-	// use .output for bytes
-	get hex() { return [...this.output].map(x => x.toString(16).padStart(2, '0')).join(''); }
-	//get x() { return `0x${this.hex}`; }
-	//get n() { return BigInt(this.x); }
 }
 
-// https://github.com/brix/crypto-js/blob/develop/src/sha3.js
-const RC = new Uint32Array(48);
-for (let LFSR = 1, i = 0; i < RC.length;) {
-	let lower = 0, upper = 0;
-	for (let j = 0; j < 7; j++) {
-		if (LFSR & 1) {
-			let shift = (1 << j) - 1;
-			if (shift < 32) {
-				lower ^= 1 << shift;
-			} else {
-				upper ^= 1 << (shift - 32);
+class Extended extends KeccakHasher {
+	constructor(bits, padding) {
+		super(bits << 1, padding);
+		this.size0 = bits >> 2; // default output size
+		this.byte_offset = 0; // byte-offset of output
+	}
+	bytes(size) {
+		this.finalize();
+		if (!size) size = this.size0;
+		let {sponge, byte_offset, block_count} = this;
+		let trim = (byte_offset & 3);
+		let blocks = (trim > 0) + ((size + 3) >> 2);
+		let output = new Int32Array(blocks);
+		let block_index = (byte_offset >> 2) % block_count;
+		for (let i = 0; i < blocks; i++) {
+			output[i] = sponge[block_index++];
+			if (block_index == block_count) {
+				permute32(sponge);
+				block_index = 0;
 			}
 		}
-		LFSR = (LFSR & 0x80) ? (LFSR << 1) ^ 0x71 : (LFSR << 1);
+		this.byte_offset = byte_offset + size;
+		return new Uint8Array(output.buffer, trim, size);
 	}
-	RC[i++] = lower;
-	RC[i++] = upper;
+	hex(size) { return [...this.bytes(size)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 }
+
+class Constant extends KeccakHasher {
+	constructor(bits, padding) {
+		super(bits << 1, padding);
+		this.size = bits >> 5;
+	}
+	get hex() { return [...this.bytes].map(x => x.toString(16).padStart(2, '0')).join(''); }
+ 	get bytes() {
+		this.finalize();
+		let {size, sponge: state} = this;
+		let v = new Int32Array(size);
+		for (let i = 0; i < size; i++) {
+			v[i] = state[i];
+		}		
+		return new Uint8Array(v.buffer);
+	}
+}
+
+// from tests/round_const.js
+//const RC = Int32Array.of(1,0,32898,0,32906,-2147483648,-2147450880,-2147483648,32907,0,-2147483647,0,-2147450751,-2147483648,32777,-2147483648,138,0,136,0,-2147450871,0,-2147483638,0,-2147450741,0,139,-2147483648,32905,-2147483648,32771,-2147483648,32770,-2147483648,128,-2147483648,32778,0,-2147483638,-2147483648,-2147450751,-2147483648,32896,-2147483648,-2147483647,0,-2147450872,-2147483648);
+const RC = [1,0,32898,0,32906,-2147483648,-2147450880,-2147483648,32907,0,-2147483647,0,-2147450751,-2147483648,32777,-2147483648,138,0,136,0,-2147450871,0,-2147483638,0,-2147450741,0,139,-2147483648,32905,-2147483648,32771,-2147483648,32770,-2147483648,128,-2147483648,32778,0,-2147483638,-2147483648,-2147450751,-2147483648,32896,-2147483648,-2147483647,0,-2147450872,-2147483648];
 
 // https://github.com/emn178/js-sha3/blob/master/src/sha3.js
-function permute(s) {
+function permute32(s) {
 	for (let n = 0; n < 48; n += 2) {
 		let c0 = s[0] ^ s[10] ^ s[20] ^ s[30] ^ s[40];
 		let c1 = s[1] ^ s[11] ^ s[21] ^ s[31] ^ s[41];
