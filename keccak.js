@@ -1,7 +1,9 @@
-export function keccak(bits = 256) { return new Constant(bits,     0b1); } // [1]0*1
-export function sha3(bits = 256)   { return new Constant(bits,   0b110); } // [011]0*1
+export function keccak(bits = 256) { return new Fixed(bits,        0b1); } // [1]0*1
+export function sha3(bits = 256)   { return new Fixed(bits,      0b110); } // [011]0*1
 export function shake(bits)        { return new Extended(bits, 0b11111); } // [11111]0*1
 
+// returns Uint8Array from string
+// accepts only string
 export function bytes_from_str(s) {
 	if (typeof s !== 'string') throw TypeError('expected string');
 	s = unescape(encodeURIComponent(s)); // explode utf16
@@ -13,6 +15,9 @@ export function bytes_from_str(s) {
 	return v;
 }
 
+// returns Uint8Array from hex
+// 0x- is optional
+// accepts hex-string of even length
 export function bytes_from_hex(s) {
 	if (typeof s !== 'string') throw TypeError('expected string');
 	let {length} = s;
@@ -34,13 +39,16 @@ class KeccakHasher {
 		const C = 1600;
 		if (capacity_bits & 0x1F) throw new Error('capacity % 32 != 0');
 		if (capacity_bits < 0 || capacity_bits >= C) throw new Error(`capacity must be [0,${C})`);
-		this.sponge = Array(50).fill(0); // new Int32Array(RC.length + 2);
+		this.sponge = Array(50).fill(0); 
+		//this.sponge = new Int32Array(50); //RC.length + 2); 
 		this.block_count = (C - capacity_bits) >> 5;
 		this.block_index = 0; // current block index
 		this.suffix = suffix; // padding byte
 		this.ragged_block = 0; // ragged block bytes
-		this.ragged_width = 0; // ragged block width
+		this.ragged_shift = 0; // ragged block width
 	}
+	// update the hasher
+	// throws on bad input
 	update(v) {
 		if (!(v instanceof Uint8Array)) {
 			if (v instanceof ArrayBuffer) { 
@@ -55,9 +63,9 @@ class KeccakHasher {
 		}
 		let off = 0;
 		let len = v.length;
-		if (this.ragged_width > 0) {
+		if (this.ragged_shift > 0) { // make aligned
 			off = this._add_ragged(v, 0);
-			if (off == len) return this;
+			if (off == len) return this; // chainable
 		}
 		let {sponge, block_index, block_count} = this;
 		for (; off + 4 <= len; off += 4) {
@@ -71,23 +79,24 @@ class KeccakHasher {
 		if (off < len) this._add_ragged(v, off); // store remainder [1-3 bytes]
 		return this; // chainable
 	}
+	// adds [0,4]-bytes, returns quantity
 	_add_ragged(v, off) {
-		let {ragged_width, ragged_block} = this;
+		let {ragged_shift, ragged_block} = this;
 		let added = 0;
-		for (; off < v.length && ragged_width < 32; added++, off++, ragged_width += 8) {
-			ragged_block |= v[off] << ragged_width;
+		for (; off < v.length && ragged_shift < 32; added++, off++, ragged_shift += 8) {
+			ragged_block |= v[off] << ragged_shift;
 		}
-		if (ragged_width == 32) {
+		if (ragged_shift == 32) {
 			this._add_block(ragged_block);
-			ragged_width = 0;
+			ragged_shift = 0;
 			ragged_block = 0;
 		} 
 		this.ragged_block = ragged_block;
-		this.ragged_width = ragged_width;
+		this.ragged_shift = ragged_shift;
 		return added; 
 	}
 	// digest a little-endian 32-bit word
-	// warning: unsafe if ragged_width > 0
+	// warning: unsafe if ragged_shift > 0
 	_add_block(x) {
 		let {sponge, block_index, block_count} = this;
 		sponge[block_index++] ^= x;
@@ -97,21 +106,23 @@ class KeccakHasher {
 		}
 		this.block_index = block_index;
 	}	
+	// idempotent
 	finalize() {
-		let {sponge, suffix, ragged_width, block_index, block_count} = this;
-		if (ragged_width) {
-			if (ragged_width == -1) return this; // already finalized
-			suffix = this.ragged_block | (suffix << ragged_width);
-		}
-		if (block_index == block_count - 1) { 
-			suffix ^= 0x80000000;
-		} else {
-			sponge[block_count - 1] ^= 0x80000000;
+		let {sponge, suffix, ragged_shift, block_index, block_count} = this;
+		if (ragged_shift) {
+			if (ragged_shift == -1) return this; // already finalized, chainable
+			suffix = this.ragged_block | (suffix << ragged_shift);
 		}
 		sponge[block_index] ^= suffix;
+		sponge[block_count - 1] ^= 0x80000000;
 		permute32(sponge);
-		this.ragged_width = -1; // mark as finalized
+		this.ragged_shift = -1; // mark as finalized
+		return this;
 	}
+}
+
+function bytes_to_hex(v) {
+	return  [...v].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
 class Extended extends KeccakHasher {
@@ -120,6 +131,7 @@ class Extended extends KeccakHasher {
 		this.size0 = bits >> 2; // default output size
 		this.byte_offset = 0; // byte-offset of output
 	}
+	hex(size) { return bytes_to_hex(this.bytes(size)); }
 	bytes(size) {
 		this.finalize();
 		if (!size) size = this.size0;
@@ -138,15 +150,14 @@ class Extended extends KeccakHasher {
 		this.byte_offset = byte_offset + size;
 		return new Uint8Array(output.buffer, trim, size);
 	}
-	hex(size) { return [...this.bytes(size)].map(x => x.toString(16).padStart(2, '0')).join(''); }
 }
 
-class Constant extends KeccakHasher {
+class Fixed extends KeccakHasher {
 	constructor(bits, padding) {
 		super(bits << 1, padding);
 		this.size = bits >> 5;
 	}
-	get hex() { return [...this.bytes].map(x => x.toString(16).padStart(2, '0')).join(''); }
+	get hex() { return bytes_to_hex(this.bytes); }
  	get bytes() {
 		this.finalize();
 		let {size, sponge: state} = this;
