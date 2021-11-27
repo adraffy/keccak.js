@@ -37,10 +37,48 @@ export function bytes_from_hex(s) {
 	return v;
 }
 
-// returns hex from ArrayLike
+// returns hex from Uint8Array
 // no 0x-
 export function hex_from_bytes(v) {
-	return  [...v].map(x => x.toString(16).padStart(2, '0')).join('');
+	return [...v].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+// returns str from Uint8Array
+export function str_from_bytes(v) {
+	/*
+	let cps = [];
+	let pos = 0;
+	let cp = 0;
+	let need = 0;
+	while (pos < v.length) {
+		let b0 = v[pos++];
+		if (need > 0) {
+			if ((b0 >> 6) != 2) throw new Error('malformed utf8: expected continuation')
+			cp = (cp << 6) | (b0 & 0b111111);
+			if (--need == 0) cps.push(cp);
+			continue;
+		}
+		if (b0 < 0b01111111) {
+			cps.push(b0);
+		} else if (b0 < 0b11011111) {
+			cp = b0 & 0b11111;
+			need = 1;
+		} else if (b0 < 0b11101111) {
+			cp = b0 & 0b1111;
+			need = 2;
+		} else {
+			cp = b0 & 0b111;
+			need = 3;
+		}
+	}
+	if (need > 0) throw new RangeError('malformed utf8: expected more bytes');
+	return String.fromCodePoint(...ret);
+	*/
+	try {
+		return decodeURIComponent(escape(String.fromCharCode(...v)));
+	} catch (err) {
+		throw new Error('malformed utf8');
+	}
 }
 
 class KeccakHasher {
@@ -116,6 +154,7 @@ class KeccakHasher {
 		this.block_index = block_index;
 	}	
 	// idempotent
+	// called automatically by subclasses
 	finalize() {
 		let {sponge, suffix, ragged_shift, block_index, block_count} = this;
 		if (ragged_shift) {
@@ -126,7 +165,6 @@ class KeccakHasher {
 		sponge[block_count - 1] ^= 0x80000000;
 		permute32(sponge);
 		this.ragged_shift = -1; // mark as finalized
-		return this;
 	}
 }
 

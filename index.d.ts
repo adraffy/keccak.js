@@ -19,3 +19,4 @@ export function shake(bits: number): ExtendedHasher;
 export function bytes_from_str(s: string): Uint8Array;
 export function bytes_from_hex(s: string): Uint8Array;
 export function hex_from_bytes(v: Uint8Array): string;
+export function str_from_bytes(v: Uint8Array): string;

@@ -30,3 +30,22 @@ s.bytes(11); //  next 11-bytes
 s.hex(13);   //  next 13-bytes as hex string
 ```
 Uses **Round Constant LFSR** from [XKCP](https://github.com/XKCP/XKCP/blob/master/lib/low/KeccakP-1600/ref-32bits/KeccakP-1600-reference32BI.c#L103) and **32-bit Permute** from [emn178/js-sha](https://github.com/emn178/js-sha3).
+
+## Helpers
+
+```JavaScript
+import {bytes_from_hex, bytes_from_str, hex_from_bytes, str_from_bytes} from '@adraffy/keccak';
+
+console.log(bytes_from_hex('0x01'));
+console.log(bytes_from_hex('01')); // 0x is optional
+// UintArray(1)[1]
+ 
+console.log(bytes_from_str('abc')); 
+// UintArray(3)[97, 98, 99]
+
+console.log(hex_from_bytes([1,2,3,4])); // no prefix
+// "01020304"
+
+console.log(str_from_bytes([240, 159, 146, 169])); // throws on invalid utf8
+// "💩"
+```
