@@ -1,12 +1,12 @@
 # keccak.js
 1-file, 0-dependancy ES6 Keccak that works in the browser.
 
-<a href="https://raffy.antistupid.com/eth/keccak.html">Demo</a>
+[Demo](https://raffy.antistupid.com/eth/keccak.html)
 
 ```JavaScript
 import {keccak, sha3, shake} from '@adraffy/keccak';
-// browser: https://unpkg.com/@adraffy/keccak@latest/keccak.js
-//  minify: https://unpkg.com/@adraffy/keccak@latest/dist/keccak.min.js
+// browser: 
+// https://unpkg.com/@adraffy/keccak@latest/dist/keccak.min.js
 
 // create a hasher:
 let h = keccak(); // default: 256-bit
