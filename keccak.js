@@ -156,7 +156,7 @@ class KeccakHasher {
 	finalize() {
 		let {sponge, suffix, ragged_shift, block_index, block_count} = this;
 		if (ragged_shift) {
-			if (ragged_shift == -1) return this; // already finalized, chainable
+			if (ragged_shift == -1) return; // already finalized
 			suffix = this.ragged_block | (suffix << ragged_shift);
 		}
 		sponge[block_index] ^= suffix;
