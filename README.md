@@ -34,18 +34,18 @@ Uses **Round Constant LFSR** from [XKCP](https://github.com/XKCP/XKCP/blob/maste
 ## Helpers
 
 ```JavaScript
-import {bytes_from_hex, bytes_from_str, hex_from_bytes, str_from_bytes} from '@adraffy/keccak';
+import {bytes_from_hex, hex_from_bytes} from '@adraffy/keccak';
 
 console.log(bytes_from_hex('0x01'));
 console.log(bytes_from_hex('01')); // 0x is optional
 // UintArray(1)[1]
- 
-console.log(bytes_from_str('abc')); 
-// UintArray(3)[97, 98, 99]
-
 console.log(hex_from_bytes([1,2,3,4])); // no prefix
 // "01020304"
 
-console.log(str_from_bytes([240, 159, 146, 169])); // throws on invalid utf8
+import {bytes_from_utf8, utf8_from_bytes} from '@adraffy/keccak';
+
+console.log(bytes_from_utf8('abc')); 
+// UintArray(3)[97, 98, 99]
+console.log(utf8_from_bytes([240, 159, 146, 169])); // throws on invalid utf8
 // "💩"
 ```

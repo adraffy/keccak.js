@@ -5,29 +5,25 @@ export function keccak(bits = 256) { return new Fixed(bits,        0b1); } // [1
 export function sha3(bits = 256)   { return new Fixed(bits,      0b110); } // [011]0*1
 export function shake(bits)        { return new Extended(bits, 0b11111); } // [11111]0*1
 
-// returns Uint8Array from string
-// accepts only string
-export function bytes_from_str(s) {
-	if (typeof s !== 'string') throw TypeError('expected string');
-	s = unescape(encodeURIComponent(s)); // explode utf16
-	let {length} = s;
-	let v = new Uint8Array(length);
-	for (let i = 0; i < length; i++) {
-		v[i] = s.charCodeAt(i);
-	}
-	return v;
+// returns hex from Uint8Array
+// no 0x-prefix
+export function hex_from_bytes(v) {
+	return [...v].map(x => x.toString(16).padStart(2, '0')).join('');
 }
-
 // accepts hex-string, 0x-prefix is optional
 // returns Uint8Array
 export function bytes_from_hex(s) {
 	if (typeof s !== 'string') throw TypeError('expected string');
-	let pos = 0;
-	if (s.startsWith('0x')) pos += 2; // skip prefix
-	if (s.length & 1) s = `0${s}`; // zero-pad odd length
-	let len = (s.length - pos) >> 1;
+	if (s.startsWith('0x')) {
+		if (s.length == 2) throw new TypeError('expected digits'); // disallow "0x"
+		s = s.slice(2);
+	}
+	if (s.length & 1) {
+		s = `0${s}`; // zero-pad odd length (rare)
+	}
+	let len = s.length >> 1;
 	let v = new Uint8Array(len);
-	for (let i = 0; i < len; i++) {
+	for (let i = 0, pos = 0; i < len; i++) {
 		let b = parseInt(s.slice(pos, pos += 2), 16);
 		if (Number.isNaN(b)) throw new TypeError('expected hex byte');
 		v[i] = b;
@@ -35,47 +31,27 @@ export function bytes_from_hex(s) {
 	return v;
 }
 
-// returns hex from Uint8Array
-// no 0x-prefix
-export function hex_from_bytes(v) {
-	return [...v].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
-// returns str from Uint8Array
-export function str_from_bytes(v) {
-	/*
-	let cps = [];
-	let pos = 0;
-	let cp = 0;
-	let need = 0;
-	while (pos < v.length) {
-		let b0 = v[pos++];
-		if (need > 0) {
-			if ((b0 >> 6) != 2) throw new Error('malformed utf8: expected continuation')
-			cp = (cp << 6) | (b0 & 0b111111);
-			if (--need == 0) cps.push(cp);
-			continue;
-		}
-		if (b0 < 0b01111111) {
-			cps.push(b0);
-		} else if (b0 < 0b11011111) {
-			cp = b0 & 0b11111;
-			need = 1;
-		} else if (b0 < 0b11101111) {
-			cp = b0 & 0b1111;
-			need = 2;
-		} else {
-			cp = b0 & 0b111;
-			need = 3;
-		}
+// returns Uint8Array from string
+// accepts only string
+export function bytes_from_utf8(s) {
+	if (typeof s !== 'string') throw TypeError('expected string');
+	try {
+		s = unescape(encodeURIComponent(s));
+	} catch (cause) {
+		throw new Error('malformed utf8', {cause});
 	}
-	if (need > 0) throw new RangeError('malformed utf8: expected more bytes');
-	return String.fromCodePoint(...ret);
-	*/
+	let {length} = s;
+	let v = new Uint8Array(length);
+	for (let i = 0; i < length; i++) {
+		v[i] = s.charCodeAt(i);
+	}
+	return v;
+}
+export function utf8_from_bytes(v) {
 	try {
 		return decodeURIComponent(escape(String.fromCharCode(...v)));
-	} catch (err) {
-		throw new Error('malformed utf8');
+	} catch (cause) {
+		throw new Error('malformed utf8', {cause});
 	}
 }
 
@@ -101,7 +77,7 @@ class KeccakHasher {
 			} else if (Array.isArray(v)) { 
 				v = Uint8Array.from(v);
 			} else if (typeof v === 'string') {
-				v = bytes_from_str(v);
+				v = bytes_from_utf8(v);
 			} else {
 				throw new TypeError('expected bytes');
 			}

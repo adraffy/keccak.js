@@ -7,6 +7,13 @@ import {Keccak as sha3_Keccak} from 'sha3';
 import js_sha3 from 'js-sha3';
 const js_sha3_keccak256 = js_sha3.keccak256;
 
+export function compare_array(a, b) {
+	let {length: n} = a;
+	let c = n - b.length;
+	for (let i = 0; c == 0 && i < n; i++) c = a[i] - b[i];
+	return c;
+}
+
 export function random_bytes(n) {	
 	let v = new Uint8Array(n);
 	for (let i = 0; i < n; i++) {

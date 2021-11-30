@@ -1,6 +1,10 @@
 import {keccak, sha3, shake} from '../keccak.js';
 import {readFileSync} from 'fs';
 
+function local_file(name) {
+	return new URL(name, import.meta.url).pathname;
+}
+
 function test_list(tests) {
 	let last_input;
 	for (let x of tests) {
@@ -35,10 +39,6 @@ function test_list(tests) {
 function test_file(path) {
 	test_list(JSON.parse(readFileSync(path)));
 	console.log(`Pass: ${path}`);
-}
-
-function local_file(name) {
-	return new URL(name, import.meta.url).pathname;
 }
 
 try {

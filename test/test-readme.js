@@ -22,12 +22,13 @@ s.hex(13);   //  next 13-bytes as hex string
 
 console.log('[Helpers]');
 
-import {bytes_from_hex, bytes_from_str, hex_from_bytes, str_from_bytes} from '../keccak.js'
+import {bytes_from_hex, hex_from_bytes} from '../keccak.js'
 
 console.log(bytes_from_hex('0x01'));
 console.log(bytes_from_hex('01'));
-
-console.log(bytes_from_str('abc'));
-
 console.log(hex_from_bytes([1,2,3,4]));
-console.log(str_from_bytes([240, 159, 146, 169]));
+
+import {bytes_from_utf8, utf8_from_bytes} from '../keccak.js'
+
+console.log(bytes_from_utf8('abc'));
+console.log(utf8_from_bytes([240, 159, 146, 169]));
