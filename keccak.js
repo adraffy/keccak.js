@@ -177,10 +177,10 @@ class Fixed extends KeccakHasher {
 	get hex() { return hex_from_bytes(this.bytes); }
  	get bytes() {
 		this.finalize();
-		let {size, sponge: state} = this;
+		let {size, sponge} = this;
 		let v = new Int32Array(size);
 		for (let i = 0; i < size; i++) {
-			v[i] = state[i];
+			v[i] = sponge[i];
 		}		
 		return new Uint8Array(v.buffer);
 	}

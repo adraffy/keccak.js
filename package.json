@@ -1,6 +1,6 @@
 {
   "name": "@adraffy/keccak",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "1-file, 0-dependancy ES6 Keccak",
   "keywords": ["sha3", "keccak", "shake"],
   "type": "module",
