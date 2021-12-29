@@ -14,10 +14,7 @@ export function hex_from_bytes(v) {
 // returns Uint8Array
 export function bytes_from_hex(s) {
 	if (typeof s !== 'string') throw TypeError('expected string');
-	if (s.startsWith('0x')) {
-		if (s.length == 2) throw new TypeError('expected digits'); // disallow "0x"
-		s = s.slice(2);
-	}
+	if (s.startsWith('0x')) s = s.slice(2); // optional prefix
 	if (s.length & 1) {
 		s = `0${s}`; // zero-pad odd length (rare)
 	}
