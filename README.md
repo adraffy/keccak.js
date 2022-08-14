@@ -1,7 +1,7 @@
 # keccak.js
 0-dependancy ES6 Keccak that works in the browser.
 
-[Demo](https://adraffy.github.io/adraffy/keccak.js/test/demo.html)
+[Demo](https://adraffy.github.io/keccak.js/test/demo.html)
 
 ```JavaScript
 import {keccak, sha3, shake} from '@adraffy/keccak';
