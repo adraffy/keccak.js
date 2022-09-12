@@ -1,14 +1,15 @@
-import {HASHERS, random_bytes, random_chunks} from './lineup.js';
+import {IMPLS} from './impls.js';
+import {random_bytes, random_chunks, hex_from_bytes} from '../src/utils.js';
 
 function hash_for_chunks(h, chunks) {
 	for (let v of chunks) h.update(v);
-	return [...h.bytes()].map(x => x.toString(16).padStart(2, '0')).join('');
+	return hex_from_bytes(h.bytes());
 }
 
 function check_chunks(chunks) {
-	let h0 = hash_for_chunks(HASHERS[0].make(), chunks);
-	for (let i = 1; i < HASHERS.length; i++) {
-		if (h0 != hash_for_chunks(HASHERS[i].make(), chunks)) {
+	let h0 = hash_for_chunks(IMPLS[0].make(), chunks);
+	for (let i = 1; i < IMPLS.length; i++) {
+		if (h0 != hash_for_chunks(IMPLS[i].make(), chunks)) {
 			throw new Error('wtf!');
 		}
 	}	
@@ -18,7 +19,7 @@ function try_random_chunks(N, L) {
 	for (let i = 0; i < N; i++) { 
 		check_chunks(random_chunks((Math.random() * L) | 0));		
 	}
-	console.log(`Pass: ${N}x[0,${L}) bytes`);
+	console.log(`PASS ${N}x[0,${L}) bytes`);
 }
 
 try {
@@ -31,7 +32,7 @@ try {
 	for (let i = 0; i <= v.length; i++) {
 		check_chunks([v.subarray(0, i)]);
 	}
-	console.log(`Pass: [0,${v.length}]-lengths`);
+	console.log(`PASS [0,${v.length}]-lengths`);
 
 } catch (err) {
 	console.error(err);

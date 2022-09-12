@@ -1,7 +1,0 @@
-{
-	"type": "module",
-	"dependencies": {
-		"js-sha3": "^0.8.0",
-		"sha3": "^2.1.4"
-	}
-}

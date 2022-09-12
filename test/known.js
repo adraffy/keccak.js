@@ -1,24 +1,20 @@
-import {keccak, sha3, shake} from '../keccak.js';
-import {readFileSync} from 'fs';
-
-function local_file(name) {
-	return new URL(name, import.meta.url).pathname;
-}
+import {keccak, sha3, shake} from '../src/keccak.js';
+import {readFileSync} from 'node:fs';
 
 function test_list(tests) {
 	let last_input;
-	for (let x of tests) {
+	for (let test of tests) {
 		try {
-			let {input, base64} = x;
+			let {input, base64} = test;
 			if (input !== undefined) {
 				last_input = input;
-				if (Object.keys(x).length == 1) continue;
+				if (Object.keys(test).length == 1) continue;
 			} else if (typeof base64 === 'string') {
 				last_input = Buffer.from(base64, 'base64');
-				if (Object.keys(x).length == 1) continue;
+				if (Object.keys(test).length == 1) continue;
 			}
 			if (last_input === undefined) throw new Error('no input');
-			let {algo, bits, n} = x;
+			let {algo, bits, n} = test;
 			let hash;
 			switch (algo?.toLowerCase()) {
 				case 'keccak': hash = keccak(bits).update(last_input).hex; break;
@@ -26,11 +22,11 @@ function test_list(tests) {
 				case 'shake':  hash = shake(bits).update(last_input).hex(n); break;
 				default: throw new Error(`unknown algo`);
 			}	
-			if (hash !== x.hash) {
+			if (hash !== test.hash) {
 				throw new Error(`different: ${hash}`);
 			}
 		} catch (err) {
-			console.error(x);
+			console.error(test);
 			throw err;
 		}
 	}
@@ -38,7 +34,7 @@ function test_list(tests) {
 
 function test_file(path) {
 	test_list(JSON.parse(readFileSync(path)));
-	console.log(`Pass: ${path}`);
+	console.log(`PASS ${path}`);
 }
 
 try {
@@ -49,10 +45,10 @@ try {
 
 	// examples from wikpedia
 	// https://en.wikipedia.org/wiki/SHA-3#Examples_of_SHA-3_variants
-	test_file(local_file('data-wiki.json'));
+	test_file(new URL('./data/wikipedia.json', import.meta.url));
 
 	// generated samples from Mathematica v12.1
-	test_file(local_file('data-mathematica.json'));
+	test_file(new URL('./data/mathematica.json', import.meta.url));
 
 } catch (err) {
 	console.error(err);

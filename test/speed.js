@@ -1,8 +1,8 @@
-import {HASHERS, random_bytes, random_chunks} from './lineup.js';
+import {IMPLS} from './impls.js';
+import {hex_from_bytes, random_bytes, random_chunks} from '../src/utils.js';
 
-function compare(inputs) {
-	let n = Math.max(...HASHERS.map(x => x.name.length));
-	HASHERS.map(x => {
+function batch_hash(inputs) {
+	format_results(IMPLS.map(x => {
 		const t0 = performance.now();
 		let hh = x.make();
 		for (let chunks of inputs) {
@@ -10,10 +10,17 @@ function compare(inputs) {
 			for (let v of chunks) h.update(v);
 			hh.update(h.bytes());
 		}
-		let sig = [...hh.bytes()].map(x => x.toString(16).padStart(2, '0')).join('');
+		let sig = hex_from_bytes(hh.bytes());
 		return {...x, t: performance.now() - t0, sig};
-	}).sort((a, b) => a.t - b.t).forEach(({name, t, sig}) => {
-		console.log(`${name.padStart(n)} | ${t.toFixed(0).padStart(7)} | ${sig}`);
+	}));
+}
+
+function format_results(m) {
+	let n = Math.max(...m.map(x => x.name.length));
+	m.sort((a, b) => a.t - b.t).forEach(({name, t, sig}) => {
+		let line = `${name.padStart(n)} | ${t.toFixed(0).padStart(7)}`;
+		if (sig) line += ` | ${sig}`;
+		console.log(line);
 	});
 }
 
@@ -23,52 +30,52 @@ console.log('[One Chunk]')
 for (let i = 0; i < inputs.length; i++) {
 	inputs[i] = [random_bytes(Math.random() * 1000000 | 0)];
 }
-compare(inputs);
+batch_hash(inputs);
 
 console.log('[Multi Chunk]')
 for (let i = 0; i < inputs.length; i++) {
 	inputs[i] = random_chunks((Math.random() * 1000000) | 0);
 }
-compare(inputs);
+batch_hash(inputs);
 
 console.log('[Block-aligned Chunk]');
 for (let i = 0; i < inputs.length; i++) {
 	inputs[i] = [random_bytes(34 * 4 * (i + 1) * 100)];
 }
-compare(inputs);
+batch_hash(inputs);
 
 console.log('[constructor]');
-for (const x of HASHERS) {
+format_results(IMPLS.map(impl => {
 	const t0 = performance.now();
-	for (let i = 0; i < 1000000; i++) x.make();
+	for (let i = 0; i < 1000000; i++) impl.make();
 	let t = performance.now() - t0;
-	console.log({name: x.name, t});
-}
+	return {...impl, t};
+}));
 
 console.log('[update]');
 for (let i = 0; i < inputs.length; i++) {
 	inputs[i] = random_bytes(1234567);
 }
-for (const x of HASHERS) {
-	let h = x.make();
+format_results(IMPLS.map(impl => {
+	let h = impl.make();
 	const t0 = performance.now();
 	for (let v of inputs) h.update(v);
 	let t = performance.now() - t0;
-	console.log({name: x.name, t});
-}
+	return {...impl, t};
+}));
 
 console.log('[finalize]');
 for (let i = 0; i < inputs.length; i++) {
 	inputs[i] = random_bytes(1234567);
 }
-for (const x of HASHERS) {
+format_results(IMPLS.map(impl => {
 	let hashers = inputs.map(v => {
-		let h = x.make();
+		let h = impl.make();
 		h.update(v);
 		return h;
 	});
 	const t0 = performance.now();
 	hashers.forEach(h => h.bytes());
 	let t = performance.now() - t0;
-	console.log({name: x.name, t});
-}
+	return {...impl, t};
+}));

@@ -33,25 +33,25 @@ textarea {
 	resize: vertical;
 	min-height: 5rem;
 }
-#options {
+.options {
 	display: flex;
 	align-items: stretch;
 	justify-content: flex-end;
 	gap: 1rem;
 }
-#options span {
+.options span {
 	flex-grow: 1;
 	align-self: center;
 	font-size: 12pt;
 }
-#options label {
+.options label {
 	display: flex;
 	align-items: center;
 }
-#options button {
+#hash_btn {
 	font-weight: bold;
 }
-#options * {
+.options * {
 	font-size: 16pt;
 }
 #output pre {
@@ -76,7 +76,7 @@ footer {
 	select, input {
 		font-size: 100%;
 	}
-	#options {
+	.options {
 		flex-wrap: wrap;
 	}
 }
@@ -87,9 +87,12 @@ footer {
 <a class="ext" href="https://github.com/adraffy/keccak.js">@adraffy/keccak.js</a>
 <h1><a href="https://en.wikipedia.org/wiki/SHA-3">Keccak</a> Hasher</h1>
 </header>
-<textarea rows="3"></textarea>
-<div id="options">
+<div class="options">
 <span>[Shift]-Return to newline.  Shake again for more.</span>
+<label><input type="checkbox" id="escape_check">Replace <code>{HEX}</code></label>
+</div>
+<textarea rows="3"></textarea>
+<div class="options">
 <select>
 <option>Keccak 224</option>
 <option selected>Keccak 256</option>
@@ -104,20 +107,21 @@ footer {
 <option>Namehash</option>
 <option>EVM Method</option>
 </select>
-<label class="hide">Bytes: <input id="size_field" placeholder="Auto" size="3"></label>
-<button>Hash</button>
+<label id="bytes_label" class="hide">Bytes: <input id="size_field" placeholder="Auto" size="3"></label>
+<button id="hash_btn">Hash</button>
 </div>
 <div id="output"></div>
 <footer>Created by <a href="https://twitter.com/adraffy">raffy.eth</a></footer>
 <script type="module">
-import {keccak, sha3, shake, hex_from_bytes} from 'https://unpkg.com/@adraffy/keccak@latest/keccak.js';
+import {keccak, sha3, shake, hex_from_bytes} from '../dist/keccak.min.js';
 
 const input_ta = document.querySelector('textarea');
 const algo_select = document.querySelector('select');
 const output_div = document.querySelector('#output');
-const hash_btn = document.querySelector('button');
-const bytes_wrapper = document.querySelector('label');
+const hash_btn = document.querySelector('#hash_btn');
+const bytes_label = document.querySelector('#bytes_label');
 const size_field = document.querySelector('#size_field');
+const escape_check = document.querySelector('#escape_check');
 
 let last_config, last_shake;
 
@@ -135,7 +139,7 @@ update_options();
 input_ta.focus();
 
 function update_options() {
-	bytes_wrapper.classList.toggle('hide', !algo_select.value.includes('SHAKE'));
+	bytes_label.classList.toggle('hide', !algo_select.value.includes('SHAKE'));
 }
 function hash() {
 	let config = algo_select.value;	
@@ -147,13 +151,24 @@ function hash() {
 		bits = parseInt(match[2]);
 	}	
 	try {
+			
+		let input = input_ta.value;
+		if (escape_check.checked) {
+			input = input.replace(/\{([0-9a-f]+)\}/iug, (_, s) => {
+				let x = parseInt(s, 16);
+				if (x > 0xFF) {
+					throw new Error(`Expected hex byte [00-FF]: ${s}`);
+				}
+				return String.fromCharCode(x);
+			});
+		}
 		let hash;
 		if (algo === 'Namehash') {
-			hash = namehash(input_ta.value);
+			hash = namehash(input);
 		} else if (algo === 'EVM Method') {
-			hash = keccak().update(input_ta.value).hex.slice(0, 8);
+			hash = keccak().update(input).hex.slice(0, 8);
 		} else if (algo === 'SHA3') {
-			hash = sha3(bits).update(input_ta.value).hex;
+			hash = sha3(bits).update(input).hex;
 		} else if (algo === 'SHAKE') {
 			let size = parseInt(size_field.value.trim());
 			config = `${algo}-${bits}-${size}`;
@@ -161,10 +176,10 @@ function hash() {
 				document.querySelector('pre').insertAdjacentText('beforeend', '\n' + last_shake.hex(size));
 				return;
 			}
-			last_shake = shake(bits).update(input_ta.value);
+			last_shake = shake(bits).update(input);
 			hash = last_shake.hex(size);
 		} else {
-			hash = keccak(bits).update(input_ta.value).hex;
+			hash = keccak(bits).update(input).hex;
 		}
 		output_div.innerHTML = `<pre>${hash}</pre>`;
 	} catch (err) {

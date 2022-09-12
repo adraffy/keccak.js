@@ -21,3 +21,4 @@ export function hex_from_bytes(v: Uint8Array): string;
 
 export function bytes_from_utf8(s: string): Uint8Array;
 export function utf8_from_bytes(v: Uint8Array): string;
+
