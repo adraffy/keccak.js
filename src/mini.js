@@ -1,4 +1,4 @@
-// only keccak 256
+// only 256-bit keccak
 import {permute32} from './permute.js';
 import {bytes_from_int32LE} from './utils.js';
 export default function(v) {

@@ -26,7 +26,7 @@ console.log(h.bytes); // Uint8Array
 console.log(h.hex);   // hex-string
 
 // chainable
-console.log(sha3().update('A').hex);
+sha3().update('A').hex;
 
 // shake support:
 let s = shake(128); 
