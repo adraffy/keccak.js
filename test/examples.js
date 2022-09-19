@@ -26,10 +26,14 @@ console.log('[Helpers]');
 import {bytes_from_hex, hex_from_bytes} from '../src/utils.js';
 
 console.log(bytes_from_hex('0x01'));
+console.log(bytes_from_hex('0x1'));
 console.log(bytes_from_hex('01'));
+console.log(bytes_from_hex('1'));
+console.log(bytes_from_hex(''));
 console.log(hex_from_bytes([1,2,3,4]));
 
 import {bytes_from_utf8, utf8_from_bytes} from '../src/utils.js';
 
 console.log(bytes_from_utf8('abc'));
+console.log(bytes_from_utf8(''));
 console.log(utf8_from_bytes([240, 159, 146, 169]));

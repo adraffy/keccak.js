@@ -45,6 +45,8 @@ import {bytes_from_hex, hex_from_bytes} from '@adraffy/keccak';
 bytes_from_hex('0x01'); // UintArray(1)[1]
 bytes_from_hex('0x1'); // can be ragged
 bytes_from_hex('01'); // "0x" is optional
+bytes_from_hex('1');
+bytes_from_hex(''); // UintArray(0)[]
 
 // Uint8ArrayLike|string -> hex-string
 // note: no "0x" prefix
@@ -57,6 +59,7 @@ import {bytes_from_utf8, utf8_from_bytes} from '@adraffy/keccak';
 
 // string -> Uint8Array
 bytes_from_utf8('abc'); // UintArray(3)[97, 98, 99]
+bytes_from_utf8(''); // UintArray(0)[]
 
 // Uint8ArrayLike|hex-string -> string
 // throws on invalid utf8
