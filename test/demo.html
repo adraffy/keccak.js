@@ -106,6 +106,7 @@ footer {
 <option>SHAKE 256</option>
 <option>Namehash</option>
 <option>EVM Method</option>
+<option>UTF8</option>
 </select>
 <label id="bytes_label" class="hide">Bytes: <input id="size_field" placeholder="Auto" size="3"></label>
 <button id="hash_btn">Hash</button>
@@ -162,13 +163,15 @@ function hash() {
 				return String.fromCharCode(x);
 			});
 		}
-		let hash;
+		let output;
 		if (algo === 'Namehash') {
-			hash = namehash(input);
+			output = namehash(input);
 		} else if (algo === 'EVM Method') {
-			hash = keccak().update(input).hex.slice(0, 8);
+			output = keccak().update(input).hex.slice(0, 8);
+		} else if (algo === 'UTF8') {
+			output = hex_from_bytes(input);
 		} else if (algo === 'SHA3') {
-			hash = sha3(bits).update(input).hex;
+			output = sha3(bits).update(input).hex;
 		} else if (algo === 'SHAKE') {
 			let size = parseInt(size_field.value.trim());
 			config = `${algo}-${bits}-${size}`;
@@ -177,11 +180,11 @@ function hash() {
 				return;
 			}
 			last_shake = shake(bits).update(input);
-			hash = last_shake.hex(size);
+			output = last_shake.hex(size);
 		} else {
-			hash = keccak(bits).update(input).hex;
+			output = keccak(bits).update(input).hex;
 		}
-		output_div.innerHTML = `<pre>${hash}</pre>`;
+		output_div.innerHTML = `<pre>${output}</pre>`;
 	} catch (err) {
 		output_div.innerHTML = `<div class="error">${err.message}</div>`;
 		console.error(err);
