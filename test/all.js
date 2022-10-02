@@ -1,7 +1,7 @@
 import './known.js';
 import './mini.js';
-import './readme.js';
+import './examples.js';
 import './same.js';
 import './shake.js';
-import './speed.js';
 import './utils.js';
+import './speed.js'; // should be last

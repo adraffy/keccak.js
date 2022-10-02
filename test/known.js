@@ -55,4 +55,3 @@ try {
 	process.exit(1);
 }
 
-console.log('OK');

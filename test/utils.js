@@ -61,5 +61,3 @@ for (let cp = 0; cp <= 0x10FFFF; cp++) {
 	}
 }
 console.log('PASS utf8 codepoints');
-
-console.log('OK');
