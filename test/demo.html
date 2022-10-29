@@ -162,6 +162,7 @@ function parse_url() {
 	}
 	option.selected = true;
 	update_options();
+	hash();
 	window.history.replaceState(null, null, ' ');
 }
 window.addEventListener('hashchange', parse_url);
