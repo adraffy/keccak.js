@@ -15,6 +15,9 @@ body {
 	flex-direction: column;
 	gap: 1rem;
 }
+button {
+	cursor: pointer;
+}
 header a.ext {
 	margin-left: 1rem;
 	float: right;
@@ -90,12 +93,13 @@ footer {
 <div class="options">
 <span>[Shift]-Return to newline.  Shake again for more.</span>
 <label><input type="checkbox" checked id="escape_check">Replace <code>{HEX}</code></label>
+<button id="copy_btn">Copy Link</button>
 </div>
 <textarea rows="3"></textarea>
 <div class="options">
 <select>
 <option>Keccak 224</option>
-<option selected>Keccak 256</option>
+<option data-default="1">Keccak 256</option>
 <option>Keccak 384</option>
 <option>Keccak 512</option>
 <option>SHA3 224</option>
@@ -123,9 +127,16 @@ const hash_btn = document.querySelector('#hash_btn');
 const bytes_label = document.querySelector('#bytes_label');
 const size_field = document.querySelector('#size_field');
 const escape_check = document.querySelector('#escape_check');
+const copy_btn = document.querySelector('#copy_btn');
 
 let last_config, last_shake;
 
+
+copy_btn.addEventListener('click', () => {
+	let [url] = window.location.href.split('#');
+	let algo = as_identifier(algo_select.value);
+	navigator.clipboard.writeText(`${url}#algo=${algo}&s=${encodeURIComponent(input_ta.value)}`);
+});
 algo_select.addEventListener('change', update_options);
 hash_btn.addEventListener('click', hash);
 input_ta.addEventListener('keydown', e => {
@@ -136,9 +147,28 @@ input_ta.addEventListener('keydown', e => {
 		last_config = null;
 	}
 });
-update_options();
+parse_url();
 input_ta.focus();
+function parse_url() {
+	let params = new URLSearchParams(window.location.hash.slice(1));
+	input_ta.value = params.get('s');
+	let algo = as_identifier(params.get('algo') || '');
+	let option = algo_select.querySelector('[data-default]');
+	for (let x of algo_select.querySelectorAll('option')) {
+		if (as_identifier(x.value) === algo) {
+			option = x;
+			break;
+		}
+	}
+	option.selected = true;
+	update_options();
+	window.history.replaceState(null, null, ' ');
+}
+window.addEventListener('hashchange', parse_url);
 
+function as_identifier(s) {
+	return s.replaceAll(/\s+/g, '').toLowerCase()
+}
 function update_options() {
 	bytes_label.classList.toggle('hide', !algo_select.value.includes('SHAKE'));
 }
