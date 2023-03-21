@@ -46,6 +46,10 @@ textarea {
 .options label {
 	display: flex;
 	align-items: center;
+	cursor: pointer;
+}
+label span {
+	user-select: none;
 }
 .options * {
 	font-size: 16pt;
@@ -103,7 +107,7 @@ footer {
 <option value="keccak-512">Keccak 512</option>
 <option value="sha3-224">SHA3 224</option>
 <option value="sha3-256">SHA3 256</option>
-<option value="sha3-385">SHA3 384</option>
+<option value="sha3-384">SHA3 384</option>
 <option value="sha3-512">SHA3 512</option>
 <option value="shake-128">SHAKE 128</option>
 <option value="shake-256">SHAKE 256</option>
@@ -112,7 +116,7 @@ footer {
 <option value="utf8">UTF-8</option>
 </select>
 <label id="bytes_label" class="hide"><span>Bytes: </span><input id="size_field" placeholder="Auto" size="3"></label>
-<button id="shake_btn">Shake</button>
+<button id="shake_btn">More</button>
 </div>
 <div id="output"></div>
 <footer>Created by <a href="https://twitter.com/adraffy">raffy.eth</a></footer>
@@ -168,7 +172,7 @@ window.addEventListener('hashchange', parse_url);
 
 
 function update() {
-	let not_shake = !algo_select.value.includes('SHAKE');
+	let not_shake = !algo_select.value.startsWith('shake-');
 	bytes_label.classList.toggle('hide', not_shake);
 	shake_btn.classList.toggle('hide', not_shake);
 	escape_label.classList.toggle('hide', encoding_select.value != 'utf8');	
@@ -183,7 +187,8 @@ function hash() {
 	if (match) {
 		algo = match[1];
 		bits = parseInt(match[2]);
-	}	
+	}
+	console.log(algo, bits);
 	try {
 		let input = input_ta.value;
 		if (encoding === 'ascii') {
