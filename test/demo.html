@@ -18,6 +18,7 @@ body {
 select, button {
 	cursor: pointer;
 	padding: 0.25rem 0.5rem;
+	font-size: 16pt;
 }
 header a.ext {
 	margin-left: 1rem;
@@ -37,6 +38,11 @@ textarea {
 	resize: vertical;
 	min-height: 5rem;
 }
+#desc_span {
+	align-self: center;
+	font-style: italic;
+	flex: 1;
+}
 .options {
 	display: flex;
 	align-items: stretch;
@@ -50,9 +56,6 @@ textarea {
 }
 label span {
 	user-select: none;
-}
-.options * {
-	font-size: 16pt;
 }
 #output pre {
 	display: block;
@@ -90,19 +93,19 @@ footer {
 </header>
 <div class="options">
 <select id="encoding_select">
-<option value="utf8" selected>UTF-8</option>
-<option value="hex">Hex</option>
-<option value="ascii">ASCII</option>
+<option value="utf8" data-desc="" selected>UTF-8</option>
+<option value="hex" data-desc="Ignores 0x-prefix and whitespace. 0-pad on left.">Hex</option>
+<option value="ascii" data-desc="8-bit">ASCII</option>
 </select>
 <label id="escape"><input type="checkbox" checked><span>Replace <code>{HEX}</code> w/Codepoint</span></label>
-<div style="flex: 1"></div>
+<span id="desc_span">a</span>
 <button id="copy_btn">Copy Link</button>
 </div>
 <textarea rows="3"></textarea>
 <div class="options">
 <select id="algo_select">
 <option value="keccak-224">Keccak 224</option>
-<option value="keccak-256">Keccak 256</option>
+<option value="keccak-256" selected>Keccak 256</option>
 <option value="keccak-384">Keccak 384</option>
 <option value="keccak-512">Keccak 512</option>
 <option value="sha3-224">SHA3 224</option>
@@ -135,6 +138,7 @@ const escape_label = document.querySelector('#escape');
 const escape_check = document.querySelector('#escape input');
 const shake_btn = document.querySelector('#shake_btn');
 const copy_btn = document.querySelector('#copy_btn');
+const desc_span = document.querySelector('#desc_span');
 
 let last_config, last_shake, hash_timer;
 
@@ -161,21 +165,23 @@ input_ta.focus();
 function parse_url() {
 	let params = new URLSearchParams(window.location.hash.slice(1));
 	input_ta.value = params.get('s');
-	algo_select.value = params.get('algo');
-	if (algo_select.selectedIndex < 0) algo_select.value = 'keccak-256';
-	encoding_select.value = params.get('encoding');
-	if (encoding_select.selectedIndex < 0) encoding_select.value = 'utf8';
+	set_option(algo_select, params.get('algo'));
+	set_option(encoding_select, params.get('encoding'));
 	update();
 	window.history.replaceState(null, null, ' ');
 }
+function set_option(select, value) {
+	select.value = value
+	if (select.selectedIndex < 0) select.value = select.querySelector('[selected]').value
+}
 window.addEventListener('hashchange', parse_url);
-
 
 function update() {
 	let not_shake = !algo_select.value.startsWith('shake-');
 	bytes_label.classList.toggle('hide', not_shake);
 	shake_btn.classList.toggle('hide', not_shake);
 	escape_label.classList.toggle('hide', encoding_select.value != 'utf8');	
+	desc_span.innerText = encoding_select.selectedOptions[0].dataset.desc;
 	hash();
 }
 function hash() {
@@ -188,7 +194,6 @@ function hash() {
 		algo = match[1];
 		bits = parseInt(match[2]);
 	}
-	console.log(algo, bits);
 	try {
 		let input = input_ta.value;
 		if (encoding === 'ascii') {
@@ -206,7 +211,7 @@ function hash() {
 					try {
 						return String.fromCodePoint(cp);
 					} catch (err) {
-						throw new Error(`Invalid codepoint: ${s}`);
+						throw new Error(`Invalid Codepoint: ${s}`);
 					}
 				});
 			}
