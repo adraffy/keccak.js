@@ -1,5 +1,5 @@
-import {terser} from 'rollup-plugin-terser';
-import {nodeResolve} from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
+import nodeResolve from '@rollup/plugin-node-resolve';
 
 const TERSER = terser({
 	compress: {
@@ -13,34 +13,40 @@ const NODE = nodeResolve();
 
 export default [
 	{
-		input: './src/lib.js',
+		input: './src/index.js',
 		plugins: [NODE],
 		output: [
 			{
-				file: './dist/keccak.js',
+				file: './dist/index.js',
 				format: 'es'
-			}
-		]
-	},
-	{
-		input: './src/lib.js',
-		plugins: [NODE],
-		output: [
+			},
 			{
-				file: './dist/keccak.min.js',
+				file: './dist/index.min.js',
 				format: 'es',
 				plugins: [TERSER]
+			},
+			{
+				file: './dist/index.cjs',
+				format: 'cjs',
 			}
 		]
 	},
 	{
-		input: './src/mini.js',
+		input: './src/keccak256.js',
 		plugins: [NODE],
 		output: [
+			{
+				file: './dist/keccak256.js',
+				format: 'es'
+			},
 			{
 				file: './dist/keccak256.min.js',
 				format: 'es',
 				plugins: [TERSER]
+			},
+			{
+				file: './dist/keccak256.cjs',
+				format: 'cjs',
 			}
 		]
 	},
