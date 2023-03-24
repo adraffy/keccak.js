@@ -2,7 +2,7 @@
 0-dependancy ES6 Keccak that works in the browser.
 
 * **11% faster** than [`js-sha3`](https://www.npmjs.com/package/js-sha3) (also 2-3x smaller)
-* [`6KB` **Default**](./dist/keccak.min.js) — full library
+* [`6KB` **Default**](./dist/index.min.js) — full library
 * [`4KB`](./dist/keccak256.min.js) — only [`256-bit Keccak`](./src/keccak256.js) for `Uint8Array` &rarr; `Uint8Array`
 
 [Demo](https://adraffy.github.io/keccak.js/test/demo.html)
@@ -10,7 +10,7 @@
 ```JavaScript
 import {keccak, sha3, shake} from '@adraffy/keccak';
 // npm i @adraffy/keccak
-// browser: https://cdn.jsdelivr.net/npm/@adraffy/keccak@latest/dist/keccak.min.js
+// browser: https://cdn.jsdelivr.net/npm/@adraffy/keccak@latest/dist/index.min.js
 
 // create a hasher:
 let h = keccak(); // default: 256-bit

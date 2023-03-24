@@ -1,5 +1,6 @@
 interface Hasher<T> {	
 	update(input: Uint8Array | ArrayBuffer | number[] | string): T;
+	update_hex(input: string): T;
 }
 
 interface ExtendedHasher extends Hasher<ExtendedHasher> {
