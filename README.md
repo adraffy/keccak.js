@@ -5,7 +5,7 @@
 * [`6KB` **Default**](./dist/index.min.js) — full library
 * [`4KB`](./dist/keccak256.min.js) — only [`256-bit Keccak`](./src/keccak256.js) for `Uint8Array` &rarr; `Uint8Array`
 
-[Demo](https://adraffy.github.io/keccak.js/test/demo.html)
+[**Demo**](https://adraffy.github.io/keccak.js/test/demo.html) ⭐
 
 ```JavaScript
 import {keccak, sha3, shake} from '@adraffy/keccak';
