@@ -242,7 +242,9 @@ function hash() {
 		} else {
 			output = keccak(bits).update(input).hex;
 		}
-		output_div.innerHTML = `<pre>${output}</pre>`;
+		let pre = document.createElement('pre');
+		pre.innerText = output;
+		output_div.replaceChildren(pre);
 	} catch (err) {
 		output_div.innerHTML = `<div class="error">${err.message}</div>`;
 		console.error(err);
