@@ -17,7 +17,7 @@ export default [
 		plugins: [NODE],
 		output: [
 			{
-				file: './dist/index.js',
+				file: './dist/index.mjs',
 				format: 'es'
 			},
 			{
@@ -36,7 +36,7 @@ export default [
 		plugins: [NODE],
 		output: [
 			{
-				file: './dist/keccak256.js',
+				file: './dist/keccak256.mjs',
 				format: 'es'
 			},
 			{

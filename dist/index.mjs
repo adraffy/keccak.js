@@ -1,5 +1,3 @@
-'use strict';
-
 // from round-const.js
 const RC = [1,0,32898,0,32906,-2147483648,-2147450880,-2147483648,32907,0,-2147483647,0,-2147450751,-2147483648,32777,-2147483648,138,0,136,0,-2147450871,0,-2147483638,0,-2147450741,0,139,-2147483648,32905,-2147483648,32771,-2147483648,32770,-2147483648,128,-2147483648,32778,0,-2147483638,-2147483648,-2147450751,-2147483648,32896,-2147483648,-2147483647,0,-2147450872,-2147483648];
 
@@ -427,10 +425,4 @@ class Fixed extends KeccakHasher {
 	}
 }
 
-exports.bytes_from_hex = bytes_from_hex;
-exports.bytes_from_utf8 = bytes_from_utf8;
-exports.hex_from_bytes = hex_from_bytes;
-exports.keccak = keccak;
-exports.sha3 = sha3;
-exports.shake = shake;
-exports.utf8_from_bytes = utf8_from_bytes;
+export { bytes_from_hex, bytes_from_utf8, hex_from_bytes, keccak, sha3, shake, utf8_from_bytes };

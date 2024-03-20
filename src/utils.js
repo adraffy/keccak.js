@@ -116,14 +116,6 @@ export function bytes_from_utf8(s) {
 	return Uint8Array.from(v);
 }
 
-
-export function compare_arrays(a, b) {
-	let n = a.length;
-	let c = n - b.length;
-	for (let i = 0; c == 0 && i < n; i++) c = a[i] - b[i];
-	return c;
-}
-
 export function random_bytes(n) {	
 	let v = new Uint8Array(n);
 	for (let i = 0; i < n; i++) {
@@ -143,3 +135,4 @@ export function random_chunks(v) {
 	}
 	return chunks;
 }
+

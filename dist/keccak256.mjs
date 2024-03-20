@@ -2,7 +2,7 @@
 const RC = [1,0,32898,0,32906,-2147483648,-2147450880,-2147483648,32907,0,-2147483647,0,-2147450751,-2147483648,32777,-2147483648,138,0,136,0,-2147450871,0,-2147483638,0,-2147450741,0,139,-2147483648,32905,-2147483648,32771,-2147483648,32770,-2147483648,128,-2147483648,32778,0,-2147483638,-2147483648,-2147450751,-2147483648,32896,-2147483648,-2147483647,0,-2147450872,-2147483648];
 
 // https://github.com/emn178/js-sha3/blob/master/src/sha3.js
-export function permute32(s) {
+function permute32(s) {
 	for (let n = 0; n < 48; n += 2) {
 		let c0 = s[0] ^ s[10] ^ s[20] ^ s[30] ^ s[40];
 		let c1 = s[1] ^ s[11] ^ s[21] ^ s[31] ^ s[41];
@@ -182,3 +182,48 @@ export function permute32(s) {
 		s[1] ^= RC[n + 1];
 	}
 }
+
+function bytes_from_int32LE(u) {
+	let n = u.length;
+	let v = new Uint8Array(n << 2);
+	let i = 0;
+	for (let x of u) {
+		v[i++] = x;
+		v[i++] = x >> 8;
+		v[i++] = x >> 16;
+		v[i++] = x >> 24;
+	}
+	return v;
+}
+
+// only 256-bit keccak
+function keccak256(v) {
+	if (!(v instanceof Uint8Array)) throw new TypeError('expected Uint8Array');
+	const block_count = 34;
+	let sponge = [];
+	for (let i = 0; i < 50; i++) sponge[i] = 0;
+	let off = 0;
+	let len = v.length;
+	let blocks = len >> 2;
+	let block_index;
+	while (true) {
+		block_index = 0;
+		let end = Math.min(block_count, blocks);
+		while (block_index < end) {
+			sponge[block_index++] ^= v[off++] | (v[off++] << 8) | (v[off++] << 16) | (v[off++] << 24);
+		}
+		if (end < block_count) break;
+		permute32(sponge);
+		blocks -= block_count;
+	}
+	let suffix = 1;
+	while (off < len) {
+		suffix = (suffix << 8) | v[--len];
+	}
+	sponge[block_index] ^= suffix;
+	sponge[block_count-1] ^= 0x80000000;
+	permute32(sponge);
+	return bytes_from_int32LE(sponge.slice(0, 8));
+}
+
+export { keccak256 as default };
