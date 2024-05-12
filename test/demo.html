@@ -66,6 +66,7 @@ textarea {
 #size_field {
 	padding: 4px;
 }
+#output:empty { display: none; }
 #output {
 	margin-top: 16px;
 	padding: 16px;
@@ -76,7 +77,6 @@ textarea {
 }
 #output.error {
 	background-color: #fcc;
-	border: 3px dashed #f00;
 }
 footer {
 	text-align: center;
@@ -115,7 +115,7 @@ footer {
 </div>
 <textarea rows="3"></textarea>
 <div class="options">	
-	<button id="digest_output_btn">⬆️ Digest Output</button>
+	<button id="again_btn">⬆️ Digest Output</button>
 
 	<select id="algo_select">
 	<optgroup label="keccak.js">
@@ -131,8 +131,9 @@ footer {
 		<option value="shake-256">SHAKE 256</option>
 	</optgroup>
 	<optgroup label="Utilities">
-		<option value="namehash">Namehash</option>
-		<option value="evm">EVM Method</option>
+		<option value="namehash">ENS: Namehash</option>
+		<option value="dns-encoded">ENS: DNS Encoded</option>
+		<option value="evm">EVM Selector</option>
 		<option value="utf8">UTF-8</option>
 	</optgroup>
 	<optgroup label="Webcrypto" id="subtle">
@@ -166,17 +167,17 @@ const escape_check = document.querySelector('#escape input');
 const shake_btn = document.querySelector('#shake_btn');
 const copy_link_btn = document.querySelector('#copy_link_btn');
 const desc_span = document.querySelector('#desc_span');
+const again_btn = document.querySelector('#again_btn');
 
 let last_config, last_shake, hash_timer;
 
 document.querySelector('#subtle').disabled = !(window.crypto && window.crypto.subtle);
 
-document.querySelector('#digest_output_btn').addEventListener('click', () => {
+again_btn.addEventListener('click', () => {
 	input_ta.value = output_div.innerText;
 	last_config = null;
 	hash();
 });
-
 copy_link_btn.addEventListener('click', () => {
 	let [url] = window.location.href.split('#');
 	let params = new URLSearchParams();
@@ -258,7 +259,9 @@ async function hash() {
 		}
 		let output;
 		if (algo === 'namehash') {
-			output = namehash(utf8_from_bytes(input));
+			output = hex_from_bytes(namehash(utf8_from_bytes(input)));
+		} else if (algo === 'dns-encoded') {
+			output = hex_from_bytes(dns_encoded(utf8_from_bytes(input)));
 		} else if (algo === 'evm') {
 			output = keccak().update(input).hex.slice(0, 8);
 		} else if (algo === 'utf8') {
@@ -285,24 +288,42 @@ async function hash() {
 		}
 		output_div.innerText = output;
 		output_div.classList.remove('error');
+		again_btn.disabled = false;
 	} catch (err) {
 		output_div.classList.add('error');
-		output_div.innerText = err.message;
+		output_div.innerText = `⚠️ ${err.message}`;
+		again_btn.disabled = true;
 		console.error(err);
 	}
 	last_config = config;
 }
 
+function namesplit(s) {
+	return s ? s.split('.') : [];
+}
+
 function namehash(name) {
-	if (typeof name !== 'string') throw new TypeError('Expected string');
-	let buf = new Uint8Array(64); 
-	if (name.length > 0) {
-		for (let label of name.split('.').reverse()) {
-			buf.set(keccak().update(label).bytes, 32);
-			buf.set(keccak().update(buf).bytes, 0);
-		}
+	return namesplit(name).reduceRight((v, x) => {
+		v.set(keccak().update(x).bytes, 32);
+		v.set(keccak().update(v).bytes, 0);
+		return v;
+	}, new Uint8Array(64)).slice(0, 32);
+}
+
+function dns_encoded(name) {
+	let m = namesplit(name).map(label => {
+		let v = bytes_from_utf8(label);
+		if (!v.length) throw new Error('Name contains empty label');
+		if (v.length > 255) throw new Error(`Label too long [${v.length} > 255]: ${label}`);
+		return v;
+	});
+	let dns = new Uint8Array(m.reduce((a, v) => a + 1 + v.length, 1));
+	let pos = 0;
+	for (let v of m) {
+		dns[pos++] = v.length;
+		dns.set(v, pos); pos += v.length;
 	}
-	return hex_from_bytes(buf.subarray(0, 32));
+	return dns;
 }
 
 </script>
