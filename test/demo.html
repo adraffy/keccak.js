@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,32 +11,38 @@
 body { 
 	margin: 3rem; 
 	background: #eee;
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
 }
 select, button {
 	cursor: pointer;
-	padding: 0.25rem 0.5rem;
-	font-size: 16pt;
+	padding: 4px 8px;
+	font-size: 100%;
 }
-header a.ext {
-	margin-left: 1rem;
-	float: right;
+header {
+	display: flex;
+	justify-content: space-between;
 }
 h1 {
-	font-size: 24pt;
 	margin: 0;
 }
+label input + span {
+	user-select: none;
+	padding-left: 4px;
+}
+label code {
+	background-color: #cff;
+	padding: 2px;
+	font-size: 120%;
+}
 textarea {
+	margin-top: 16px;
 	box-sizing: border-box;
 	display: block;
 	width: 100%;
-	padding: 0.5rem;
+	padding: 8px;
 	font-family: monospace;
 	overflow-y: scroll;
 	resize: vertical;
-	min-height: 5rem;
+	min-height: 100px;
 }
 #desc_span {
 	align-self: center;
@@ -44,34 +50,38 @@ textarea {
 	flex: 1;
 }
 .options {
+	margin-top: 16px;
 	display: flex;
 	align-items: stretch;
-	justify-content: flex-end;
-	gap: 1rem;
+	gap: 16px;
 }
-.options label {
+.options > div {
 	display: flex;
 	align-items: center;
-	cursor: pointer;
+	gap: 8px;
 }
-label span {
-	user-select: none;
+#algo_select {
+	margin-left: auto;
 }
-#output pre {
-	display: block;
-	padding: 1rem;
-	background: #fff;
-	overflow-x: auto;
+#size_field {
+	padding: 4px;
 }
-.error {
-	background: #fcc;
-	padding: 1rem;
-	border: 3px dashed #f00;
+#output {
+	margin-top: 16px;
+	padding: 16px;
+	background-color: #fff;
+	line-break: anywhere;
+	white-space: pre-wrap;
 	font-family: monospace;
+}
+#output.error {
+	background-color: #fcc;
+	border: 3px dashed #f00;
 }
 footer {
 	text-align: center;
 	color: #666;
+	margin: 16px;
 }
 @media only screen and (max-width: 800px) { 
 	body {
@@ -88,38 +98,55 @@ footer {
 </head>
 <body>
 <header>
-<a class="ext" href="https://github.com/adraffy/keccak.js">adraffy/keccak.js</a>
-<h1><a href="https://en.wikipedia.org/wiki/SHA-3">Keccak</a> Hasher</h1>
+<h1><a target="_blank" href="https://en.wikipedia.org/wiki/SHA-3">Keccak</a> Hasher</h1>
+<a target="_blank" href="https://github.com/adraffy/keccak.js">adraffy/keccak.js</a>
 </header>
 <div class="options">
-<select id="encoding_select">
-<option value="utf8" data-desc="" selected>UTF-8</option>
-<option value="hex" data-desc="Ignores 0x-prefix and whitespace. 0-pad on left.">Hex</option>
-<option value="ascii" data-desc="8-bit">ASCII</option>
-</select>
-<label id="escape"><input type="checkbox" checked><span>Replace <code>{HEX}</code> w/Codepoint</span></label>
-<span id="desc_span">a</span>
-<button id="copy_btn">Copy Link</button>
+	<select id="encoding_select">
+		<option value="utf8" data-desc="" selected>UTF-8</option>
+		<option value="hex" data-desc="Ignores 0x-prefix and whitespace. 0-pad on left.">Hex</option>
+		<option value="ascii" data-desc="8-bit">ASCII</option>
+	</select>
+	<div id="escape">
+		<label><input type="checkbox" checked><span>Replace <code>{HEX}</code> w/Codepoint</span></label>
+	</div>
+	<span id="desc_span"></span>
+	<button id="copy_link_btn">🔗️ Copy Link</button>
 </div>
 <textarea rows="3"></textarea>
-<div class="options">
-<select id="algo_select">
-<option value="keccak-224">Keccak 224</option>
-<option value="keccak-256" selected>Keccak 256</option>
-<option value="keccak-384">Keccak 384</option>
-<option value="keccak-512">Keccak 512</option>
-<option value="sha3-224">SHA3 224</option>
-<option value="sha3-256">SHA3 256</option>
-<option value="sha3-384">SHA3 384</option>
-<option value="sha3-512">SHA3 512</option>
-<option value="shake-128">SHAKE 128</option>
-<option value="shake-256">SHAKE 256</option>
-<option value="namehash">Namehash</option>
-<option value="evm">EVM Method</option>
-<option value="utf8">UTF-8</option>
-</select>
-<label id="bytes_label" class="hide"><span>Bytes: </span><input id="size_field" placeholder="Auto" size="3"></label>
-<button id="shake_btn">More</button>
+<div class="options">	
+	<button id="digest_output_btn">⬆️ Digest Output</button>
+
+	<select id="algo_select">
+	<optgroup label="keccak.js">
+		<option value="keccak-224">Keccak 224</option>
+		<option value="keccak-256" selected>Keccak 256</option>
+		<option value="keccak-384">Keccak 384</option>
+		<option value="keccak-512">Keccak 512</option>
+		<option value="sha3-224">SHA3 224</option>
+		<option value="sha3-256">SHA3 256</option>
+		<option value="sha3-384">SHA3 384</option>
+		<option value="sha3-512">SHA3 512</option>
+		<option value="shake-128">SHAKE 128</option>
+		<option value="shake-256">SHAKE 256</option>
+	</optgroup>
+	<optgroup label="Utilities">
+		<option value="namehash">Namehash</option>
+		<option value="evm">EVM Method</option>
+		<option value="utf8">UTF-8</option>
+	</optgroup>
+	<optgroup label="Webcrypto" id="subtle">
+		<option value="sha-1">SHA 1</option>
+		<option value="sha-256">SHA 256</option>
+		<option value="sha-384">SHA 384</option>
+		<option value="sha-512">SHA 512</option>
+	</optgroup>
+	</select>
+	<div id="size" class="hide">
+		<label for="size_field">Bytes:</label>
+		<input id="size_field" placeholder="Auto" size="3">
+	</div>
+	<button id="shake_btn" class="hide">🔄️ More</button>
 </div>
 <div id="output"></div>
 <footer>Created by <a href="https://twitter.com/adraffy">raffy.eth</a></footer>
@@ -131,18 +158,26 @@ import {keccak, sha3, shake,
 const input_ta = document.querySelector('textarea');
 const algo_select = document.querySelector('#algo_select');
 const output_div = document.querySelector('#output');
-const bytes_label = document.querySelector('#bytes_label');
+const size_div = document.querySelector('#size');
 const size_field = document.querySelector('#size_field');
 const encoding_select = document.querySelector('#encoding_select');
-const escape_label = document.querySelector('#escape');
+const escape_div = document.querySelector('#escape');
 const escape_check = document.querySelector('#escape input');
 const shake_btn = document.querySelector('#shake_btn');
-const copy_btn = document.querySelector('#copy_btn');
+const copy_link_btn = document.querySelector('#copy_link_btn');
 const desc_span = document.querySelector('#desc_span');
 
 let last_config, last_shake, hash_timer;
 
-copy_btn.addEventListener('click', () => {
+document.querySelector('#subtle').disabled = !(window.crypto && window.crypto.subtle);
+
+document.querySelector('#digest_output_btn').addEventListener('click', () => {
+	input_ta.value = output_div.innerText;
+	last_config = null;
+	hash();
+});
+
+copy_link_btn.addEventListener('click', () => {
 	let [url] = window.location.href.split('#');
 	let params = new URLSearchParams();
 	params.append('algo', algo_select.value);
@@ -163,28 +198,32 @@ input_ta.addEventListener('keydown', e => {
 parse_url();
 input_ta.focus();
 function parse_url() {
-	let params = new URLSearchParams(window.location.hash.slice(1));
-	input_ta.value = params.get('s');
-	set_option(algo_select, params.get('algo'));
-	set_option(encoding_select, params.get('encoding'));
+	let value = window.location.hash.slice(1);
+	if (value) {
+		let params = new URLSearchParams(value);
+		input_ta.value = params.get('s');
+		set_option(algo_select, params.get('algo'));
+		set_option(encoding_select, params.get('encoding'));
+	}
+	last_config = null;
 	update();
 	window.history.replaceState(null, null, ' ');
 }
 function set_option(select, value) {
-	select.value = value
-	if (select.selectedIndex < 0) select.value = select.querySelector('[selected]').value
+	select.value = value;
+	if (select.selectedIndex < 0) select.value = select.querySelector('[selected]').value;
 }
 window.addEventListener('hashchange', parse_url);
 
 function update() {
 	let not_shake = !algo_select.value.startsWith('shake-');
-	bytes_label.classList.toggle('hide', not_shake);
+	size_div.classList.toggle('hide', not_shake);
 	shake_btn.classList.toggle('hide', not_shake);
-	escape_label.classList.toggle('hide', encoding_select.value != 'utf8');	
+	escape_div.classList.toggle('hide', encoding_select.value != 'utf8');	
 	desc_span.innerText = encoding_select.selectedOptions[0].dataset.desc;
 	hash();
 }
-function hash() {
+async function hash() {
 	let config = algo_select.value;	
 	let encoding = encoding_select.value;
 	let algo = config;
@@ -197,7 +236,7 @@ function hash() {
 	try {
 		let input = input_ta.value;
 		if (encoding === 'ascii') {
-			input = [...input].map(x => {
+			input = Uint8Array.from(input, x => {
 				let cp = x.codePointAt(0);
 				if (cp > 255) throw new Error(`Expected ASCII Codepoint: ${cp}`);
 				return cp;
@@ -230,11 +269,13 @@ function hash() {
 			}
 		} else if (algo === 'sha3') {
 			output = sha3(bits).update(input).hex;
+		} else if (algo === 'sha') {
+			output = hex_from_bytes(await crypto.subtle.digest(`${algo}-${bits}`, input));
 		} else if (algo === 'shake') {
 			let size = parseInt(size_field.value.trim());
 			config = `${algo}-${bits}-${size}`;
 			if (last_config === config) {
-				document.querySelector('pre').insertAdjacentText('beforeend', '\n' + last_shake.hex(size));
+				output_div.insertAdjacentText('beforeend', '\n' + last_shake.hex(size));
 				return;
 			}
 			last_shake = shake(bits).update(input);
@@ -242,11 +283,11 @@ function hash() {
 		} else {
 			output = keccak(bits).update(input).hex;
 		}
-		let pre = document.createElement('pre');
-		pre.innerText = output;
-		output_div.replaceChildren(pre);
+		output_div.innerText = output;
+		output_div.classList.remove('error');
 	} catch (err) {
-		output_div.innerHTML = `<div class="error">${err.message}</div>`;
+		output_div.classList.add('error');
+		output_div.innerText = err.message;
 		console.error(err);
 	}
 	last_config = config;
