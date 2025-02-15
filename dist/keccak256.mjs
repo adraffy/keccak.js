@@ -183,6 +183,10 @@ function permute32(s) {
 	}
 }
 
+function int32LE_from_bytes(v, i) {
+	return v[i] | (v[i+1] << 8) | (v[i+2] << 16) | (v[i+3] << 24);
+}
+
 function bytes_from_int32LE(u) {
 	let n = u.length;
 	let v = new Uint8Array(n << 2);
@@ -210,7 +214,8 @@ function keccak256(v) {
 		block_index = 0;
 		let end = Math.min(block_count, blocks);
 		while (block_index < end) {
-			sponge[block_index++] ^= v[off++] | (v[off++] << 8) | (v[off++] << 16) | (v[off++] << 24);
+			sponge[block_index++] ^= int32LE_from_bytes(v, off);
+			off += 4;
 		}
 		if (end < block_count) break;
 		permute32(sponge);

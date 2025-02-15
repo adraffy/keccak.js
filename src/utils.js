@@ -13,6 +13,10 @@ export function expect_byte_array(v, str_handler) {
 	throw new TypeError(`expected array of bytes`);
 }
 
+export function int32LE_from_bytes(v, i) {
+	return v[i] | (v[i+1] << 8) | (v[i+2] << 16) | (v[i+3] << 24);
+}
+
 export function bytes_from_int32LE(u) {
 	let n = u.length;
 	let v = new Uint8Array(n << 2);

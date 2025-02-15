@@ -1,5 +1,12 @@
 import {permute32} from './permute.js';
-import {hex_from_bytes, bytes_from_hex, bytes_from_utf8, expect_byte_array, bytes_from_int32LE} from './utils.js';
+import {
+	hex_from_bytes,
+	bytes_from_hex,
+	bytes_from_utf8,
+	expect_byte_array,
+	bytes_from_int32LE,
+	int32LE_from_bytes
+} from './utils.js';
 
 // primary api
 export function keccak(bits = 256) { return new Fixed(bits,        0b1); } // [1]0*1
@@ -34,7 +41,8 @@ class KeccakHasher {
 		while (true) {
 			let end = Math.min(block_count, block_index + ((len - off) >> 2));
 			while (block_index < end) {
-				sponge[block_index++] ^= v[off++] | (v[off++] << 8) | (v[off++] << 16) | (v[off++] << 24);
+				sponge[block_index++] ^= int32LE_from_bytes(v, off);
+				off += 4;
 			}
 			if (end < block_count) break;
 			permute32(sponge);

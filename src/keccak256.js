@@ -1,6 +1,6 @@
 // only 256-bit keccak
 import {permute32} from './permute.js';
-import {bytes_from_int32LE} from './utils.js';
+import {bytes_from_int32LE, int32LE_from_bytes} from './utils.js';
 export default function(v) {
 	if (!(v instanceof Uint8Array)) throw new TypeError('expected Uint8Array');
 	const block_count = 34;
@@ -14,7 +14,8 @@ export default function(v) {
 		block_index = 0;
 		let end = Math.min(block_count, blocks);
 		while (block_index < end) {
-			sponge[block_index++] ^= v[off++] | (v[off++] << 8) | (v[off++] << 16) | (v[off++] << 24);
+			sponge[block_index++] ^= int32LE_from_bytes(v, off);
+			off += 4;
 		}
 		if (end < block_count) break;
 		permute32(sponge);

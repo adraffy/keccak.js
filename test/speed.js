@@ -17,8 +17,9 @@ function batch_hash(inputs) {
 
 function format_results(m) {
 	let n = Math.max(...m.map(x => x.name.length));
+	let t0 = m.find(x => x.base).t;
 	m.sort((a, b) => a.t - b.t).forEach(({name, t, sig}) => {
-		let line = `${name.padStart(n)} | ${t.toFixed(0).padStart(7)}`;
+		let line = `${name.padStart(n)} |${t.toFixed(0).padStart(6)} |${(t / t0).toFixed(2).padStart(6)}x`;
 		if (sig) line += ` | ${sig}`;
 		console.log(line);
 	});

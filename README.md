@@ -1,7 +1,8 @@
 # keccak.js
 0-dependancy ES6 Keccak that works in the browser.
 
-* **11% faster** than [`js-sha3`](https://www.npmjs.com/package/js-sha3) (also 2-3x smaller)
+* **20% faster** than [`js-sha3`](https://www.npmjs.com/package/js-sha3) (also 2-3x smaller)
+* **350% faster** than [`@noble/hashes`](https://github.com/paulmillr/noble-hashes/)
 * [`6KB` **Default**](./dist/index.min.js) — full library
 * [`4KB`](./dist/keccak256.min.js) — only [`256-bit Keccak`](./src/keccak256.js) for `Uint8Array` &rarr; `Uint8Array`
 
@@ -21,7 +22,7 @@ h.update([1,2]);                // array of bytes
 h.update('A');                  // strings (utf8)
 h.update_hex('0x123');          // hex-strings
 
-// get hash 
+// get hash
 console.log(h.bytes); // Uint8Array
 console.log(h.hex);   // hex-string
 
@@ -53,7 +54,7 @@ bytes_from_hex(''); // UintArray(0)[]
 hex_from_bytes([1,2,3,4]); // "01020304"
 ```
 
-### UTF8
+### UTF-8
 ```Javascript
 import {bytes_from_utf8, utf8_from_bytes} from '@adraffy/keccak';
 
