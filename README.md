@@ -1,5 +1,5 @@
 # keccak.js
-0-dependancy ES6 Keccak that works in the browser.
+0-dependancy Keccak.
 
 * **20% faster** than [`js-sha3`](https://www.npmjs.com/package/js-sha3) (also 2-3x smaller)
 * **350% faster** than [`@noble/hashes`](https://github.com/paulmillr/noble-hashes/)
