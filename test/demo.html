@@ -60,8 +60,8 @@ textarea {
 	align-items: center;
 	gap: 8px;
 }
-#algo_select {
-	margin-left: auto;
+#again_btn {
+	margin-right: auto;
 }
 #size_field {
 	padding: 4px;
@@ -103,8 +103,8 @@ footer {
 </header>
 <div class="options">
 	<select id="encoding_select">
-		<option value="utf8" data-desc="" selected>UTF-8</option>
-		<option value="hex" data-desc="Ignores 0x-prefix and whitespace. 0-pad on left.">Hex</option>
+		<option value="utf8" data-desc="" data-swap="hex" selected>UTF-8</option>
+		<option value="hex" data-desc="Ignores 0x-prefix and whitespace. 0-pad on left." data-swap="utf8">Hex</option>
 		<option value="ascii" data-desc="8-bit">ASCII</option>
 	</select>
 	<div id="escape">
@@ -114,9 +114,10 @@ footer {
 	<button id="copy_link_btn">🔗️ Copy Link</button>
 </div>
 <textarea rows="3"></textarea>
-<div class="options">	
+<div class="options">
 	<button id="again_btn">⬆️ Digest Output</button>
 
+	<button id="swap_btn" class="hide">⚡️ Swap</button>
 	<select id="algo_select">
 	<optgroup label="keccak.js">
 		<option value="keccak-224">Keccak 224</option>
@@ -135,6 +136,9 @@ footer {
 		<option value="dns-encoded">ENS: DNS Encoded</option>
 		<option value="evm">EVM Selector</option>
 		<option value="utf8">UTF-8</option>
+		<option value="hex">Hex</option>
+		<option value="uri">URI Escape</option>
+		<option value="perc">Percent Escape</option>
 	</optgroup>
 	<optgroup label="Webcrypto" id="subtle">
 		<option value="sha-1">SHA 1</option>
@@ -168,6 +172,7 @@ const shake_btn = document.querySelector('#shake_btn');
 const copy_link_btn = document.querySelector('#copy_link_btn');
 const desc_span = document.querySelector('#desc_span');
 const again_btn = document.querySelector('#again_btn');
+const swap_btn = document.querySelector('#swap_btn');
 
 let last_config, last_shake, hash_timer;
 
@@ -177,6 +182,13 @@ again_btn.addEventListener('click', () => {
 	input_ta.value = output_div.innerText;
 	last_config = null;
 	hash();
+});
+swap_btn.addEventListener('click', () => {
+	const swap = encoding_select.selectedOptions[0].dataset.swap;
+	algo_select.value = encoding_select.value;
+	encoding_select.value = swap;
+	input_ta.value = output_div.innerText;
+	update();
 });
 copy_link_btn.addEventListener('click', () => {
 	let [url] = window.location.href.split('#');
@@ -220,7 +232,8 @@ function update() {
 	let not_shake = !algo_select.value.startsWith('shake-');
 	size_div.classList.toggle('hide', not_shake);
 	shake_btn.classList.toggle('hide', not_shake);
-	escape_div.classList.toggle('hide', encoding_select.value != 'utf8');	
+	escape_div.classList.toggle('hide', encoding_select.value != 'utf8');
+	swap_btn.classList.toggle('hide', encoding_select.selectedOptions[0].dataset.swap !== algo_select.value);
 	desc_span.innerText = encoding_select.selectedOptions[0].dataset.desc;
 	hash();
 }
@@ -270,6 +283,12 @@ async function hash() {
 			} else {
 				output = hex_from_bytes(input);	
 			}
+		} else if (algo === 'hex') {
+			output = hex_from_bytes(input);
+		} else if (algo === 'uri') {
+			output = encodeURIComponent(utf8_from_bytes(input));
+		} else if (algo === 'perc') {
+			output = Array.from(input, x => '%' + x.toString(16).padStart(2, '0')).join('');
 		} else if (algo === 'sha3') {
 			output = sha3(bits).update(input).hex;
 		} else if (algo === 'sha') {
@@ -289,10 +308,12 @@ async function hash() {
 		output_div.innerText = output;
 		output_div.classList.remove('error');
 		again_btn.disabled = false;
+		swap_btn.disabled = false;
 	} catch (err) {
 		output_div.classList.add('error');
 		output_div.innerText = `⚠️ ${err.message}`;
 		again_btn.disabled = true;
+		swap_btn.disabled = true;
 		console.error(err);
 	}
 	last_config = config;
